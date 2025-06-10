@@ -29,7 +29,7 @@
                   <% urls.forEach(url => { %>
                     <tr>
                       <td class="border px-4 py-2"><%= url.originalUrl %></td>
-                      <td class="border px-4 py-2 flex items-center space-x-2">
+                      <td class="border px-4 py-2">
                         <a href="/<%= url.shortUrl %>" class="text-blue-500"><%= url.shortUrl %></a>
                         <button class="copy-link-btn ml-1" title="Copy link" data-link="<%= url.fullShortUrl %>">
                           <i class="fa fa-copy text-gray-500 hover:text-blue-600"></i>
