@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link href="/css/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <%- include('partials/header', { user: user }) %>
+    <main class="flex-1 flex items-center justify-center">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center">Your Dashboard</h1>
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold">Your Shortened URLs</h2>
+            <%- include('partials/shorten-form', { user: user }) %>
+            <table class="min-w-full bg-white border border-gray-300 mt-4">
+                <thead>
+                    <tr>
+                        <th class="border px-4 py-2">Original URL</th>
+                        <th class="border px-4 py-2">Short URL</th>
+                        <th class="border px-4 py-2">Clicks</th>
+                        <th class="border px-4 py-2">Status</th>
+                        <th class="border px-4 py-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  <% urls.forEach(url => { %>
+                    <tr>
+                      <td class="border px-4 py-2"><%= url.originalUrl %></td>
+                      <td class="border px-4 py-2 flex items-center space-x-2">
+                        <a href="/<%= url.shortUrl %>" class="text-blue-500"><%= url.shortUrl %></a>
+                        <button class="copy-link-btn ml-1" title="Copy link" data-link="<%= url.fullShortUrl %>">
+                          <i class="fa fa-copy text-gray-500 hover:text-blue-600"></i>
+                        </button>
+                      </td>
+                      <td class="border px-4 py-2"><%= url.clickCount || 0 %></td>
+                      <td class="border px-4 py-2"><%= url.active === false ? 'Inactive' : 'Active' %></td>
+                      <td class="border px-4 py-2">
+                        <button class="toggle-active bg-blue-500 hover:bg-blue-600 text-white font-bold rounded px-2 py-1 transition" data-id="<%= url._id %>" data-active="<%= url.active === false ? 'false' : 'true' %>">
+                          <%= url.active === false ? 'Activate' : 'Deactivate' %>
+                        </button>
+                        <a href="/url/<%= url.shortUrl %>" class="ml-2 text-blue-600 underline hover:text-blue-800">View Analytics</a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </main>
+    <%- include('partials/footer') %>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

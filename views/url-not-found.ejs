@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Short URL Not Found</title>
+    <link href="/css/output.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
+    <%- include('partials/header', { user: user }) %>
+    <main class="flex-1 flex items-center justify-center">
+      <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center">Short URL Not Found</h1>
+        <p class="mt-4 text-center">Sorry, the short URL you requested does not exist.</p>
+        <div class="mt-6 text-center">
+          <a href="/" class="text-blue-500">Go to Home</a>
+        </div>
+      </div>
+    </main>
+    <%- include('partials/footer') %>
+  </body>
+</html>

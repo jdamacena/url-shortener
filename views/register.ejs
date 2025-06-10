@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <link href="/css/output.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
+    <%- include('partials/header', { user: user }) %>
+    <main class="flex-1 flex items-center justify-center">
+      <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-center">Register</h1>
+        <form action="/register" method="POST" class="mt-6">
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            required
+            class="border rounded p-2 w-full"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            required
+            class="border rounded p-2 w-full mt-2"
+          />
+          <button
+            type="submit"
+            class="bg-blue-500 text-white rounded p-2 mt-2 w-full"
+          >
+            Register
+          </button>
+        </form>
+        <p class="mt-4 text-center">
+          Already have an account?
+          <a href="/login" class="text-blue-500">Login</a>
+        </p>
+      </div>
+    </main>
+    <%- include('partials/footer') %>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link Analytics</title>
+  <link href="/css/output.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <%- include('partials/header', { user: user }) %>
+    <main class="flex-1 flex items-center justify-center">
+      <div class="container mx-auto p-6 max-w-2xl bg-white rounded shadow">
+        <h1 class="text-3xl font-bold text-center mb-4">Link Analytics</h1>
+        <div class="mb-4">
+          <div class="mb-2 flex items-center space-x-2">
+            <span class="font-semibold">Original URL:</span>
+            <span id="original-url-link-group">
+              <a href="<%= url.originalUrl %>" class="text-blue-600 underline" target="_blank">
+                <%= url.originalUrl %>
+              </a>
+              <% if (user) { %>
+                <button id="show-edit-original-url"
+                  class="ml-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 text-blue-700 rounded text-xs">Edit</button>
+                <% } %>
+            </span>
+            <form id="edit-original-url-form" action="/url/<%= url.shortUrl %>/edit-original" method="POST"
+              class="flex items-center space-x-2" style="display:none; margin-bottom:0;">
+              <input type="text" name="originalUrl" value="<%= url.originalUrl %>"
+                class="border border-gray-300 rounded p-2 flex-1" required />
+              <button type="submit"
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded p-2">Update</button>
+              <button type="button" id="cancel-edit-original-url"
+                class="ml-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs">Cancel</button>
+            </form>
+          </div>
+          <div class="mb-2"><span class="font-semibold">Short URL:</span> <a href="/<%= url.shortUrl %>"
+              class="text-blue-600 underline" target="_blank">
+              <%= url.shortUrl %>
+            </a></div>
+          <div class="mb-2"><span class="font-semibold">Created At:</span>
+            <%= url.createdAt ? url.createdAt.toLocaleString() : 'N/A' %>
+          </div>
+          <div class="mb-2"><span class="font-semibold">Expires At:</span>
+            <%= url.expiresAt ? url.expiresAt.toLocaleString() : 'Never' %>
+          </div>
+          <div class="mb-2"><span class="font-semibold">Last Accessed:</span>
+            <%= url.lastAccessedAt ? url.lastAccessedAt.toLocaleString() : 'Never' %>
+          </div>
+          <div class="mb-2"><span class="font-semibold">Total Clicks:</span>
+            <%= url.clickCount %>
+          </div>
+        </div>
+        <div class="mb-4">
+          <h2 class="text-xl font-semibold mb-2">Referers</h2>
+          <% if (url.referers && url.referers.length) { %>
+            <ul class="list-disc list-inside">
+              <% url.referers.slice(-10).reverse().forEach(r=> { %>
+                <li>
+                  <%= r %>
+                </li>
+                <% }) %>
+            </ul>
+            <% } else { %>
+              <div class="text-gray-500">No referer data yet.</div>
+              <% } %>
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold mb-2">Access Logs (last 10)</h2>
+          <% if (url.accessLogs && url.accessLogs.length) { %>
+            <table class="min-w-full bg-white border border-gray-300 text-xs">
+              <thead>
+                <tr>
+                  <th class="border px-2 py-1">Date</th>
+                  <th class="border px-2 py-1">Referer</th>
+                  <th class="border px-2 py-1">IP</th>
+                  <th class="border px-2 py-1">User Agent</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% url.accessLogs.slice(-10).reverse().forEach(log=> { %>
+                  <tr>
+                    <td class="border px-2 py-1">
+                      <%= log.date ? new Date(log.date).toLocaleString() : '' %>
+                    </td>
+                    <td class="border px-2 py-1">
+                      <%= log.referer || '-' %>
+                    </td>
+                    <td class="border px-2 py-1">
+                      <%= log.ip || '-' %>
+                    </td>
+                    <td class="border px-2 py-1">
+                      <%= log.userAgent || '-' %>
+                    </td>
+                  </tr>
+                  <% }) %>
+              </tbody>
+            </table>
+            <% } else { %>
+              <div class="text-gray-500">No access logs yet.</div>
+              <% } %>
+        </div>
+        <script src="/js/url-analytics.js"></script>
+      </div>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+
+</html>
