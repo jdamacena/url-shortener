@@ -128,7 +128,8 @@ app.post("/register", async (req, res) => {
   // Check if the username already exists
   const existingUser = await User.findOne({ username });
   if (existingUser) {
-    return res.status(400).send("Username already exists");
+    // Render the registration page again with an error message
+    return res.status(400).render("register", { user: req.user, error: "Username already exists" });
   }
 
   // Hash the password before saving
