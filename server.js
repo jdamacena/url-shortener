@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const shortid = require("shortid");
 const passport = require("passport");
 const session = require("express-session");
+const flash = require("connect-flash");
 const User = require("./models/user");
 const Url = require("./models/url");
 const LocalStrategy = require("passport-local").Strategy;
@@ -43,6 +44,7 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash());
 
 // Passport Local Strategy for authentication
 passport.use(
@@ -143,10 +145,18 @@ app.post("/register", async (req, res) => {
 app.post(
   "/login",
   passport.authenticate("local", {
-    successRedirect: "/dashboard", // Redirect to dashboard on successful login
-    failureRedirect: "/login", // Redirect back to login route on failure
+    successRedirect: "/dashboard",
+    failureRedirect: "/login",
+    failureFlash: true, // Enable flash messages on failure
   })
 );
+
+app.get("/login", (req, res) => {
+  res.render("login", { 
+    user: req.user, 
+    error: req.flash("error")[0] // Pass the first error message, if any
+  });
+});
 
 // User Logout
 app.get("/logout", (req, res) => {
@@ -176,13 +186,6 @@ app.get("/api/user-info", (req, res) => {
   } else {
     res.json({});
   }
-});
-
-app.get("/login", (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.redirect("/dashboard");
-  }
-  res.render("login", { user: req.user });
 });
 
 app.get("/register", (req, res) => {
