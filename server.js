@@ -13,6 +13,9 @@ import path from "path";
 import User from "./models/user.js";
 import Url from "./models/url.js";
 import apiRouter from "./routes/api.js";
+import authRouter from "./routes/auth.js";
+import urlRouter from "./routes/url.js";
+import analyticsRouter from "./routes/analytics.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -82,6 +85,9 @@ app.use(express.static(path.join(__dirname, "dist")));
 
 // API Routes first
 app.use("/api", apiRouter);
+app.use("/auth", authRouter);
+app.use("/url", urlRouter);
+app.use("/analytics", analyticsRouter);
 
 // URL Shortener redirect route - matches shortUrls only using RegExp for Express 5
 app.get(/^\/([A-Za-z0-9_-]+)$/, async (req, res) => {
