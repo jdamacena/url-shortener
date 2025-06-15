@@ -20,10 +20,12 @@
 
 <script>
 import { ref } from 'vue'
+import { useUrlStore } from '../stores/urlStore'
 
 export default {
   name: 'ShortenForm',
   setup() {
+    const urlStore = useUrlStore()
     const url = ref('')
     const expiresAt = ref('')
     const noExpire = ref(true)
@@ -32,14 +34,9 @@ export default {
     async function onSubmit() {
       result.value = null
       try {
-        const res = await fetch('/api/shorten', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url.value, expiresAt: noExpire.value ? null : expiresAt.value })
-        })
-        const data = await res.json()
-        result.value = data
-        if (data.shortUrl) {
+        await urlStore.shortenUrl(url.value, noExpire.value ? null : expiresAt.value)
+        result.value = urlStore.urls[0] // Assume the latest shortened URL is at the top
+        if (result.value.shortUrl) {
           url.value = ''
           expiresAt.value = ''
           noExpire.value = true

@@ -1,5 +1,8 @@
 import { defineStore } from "pinia";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
 export const useUrlStore = defineStore("url", {
   state: () => ({
     urls: [],
@@ -8,16 +11,16 @@ export const useUrlStore = defineStore("url", {
     currentUrl: null,
   }),
   actions: {
-    async shortenUrl(longUrl) {
+    async shortenUrl(longUrl, expiresAt) {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch("/api/shorten", {
+        const response = await fetch(`${API_BASE_URL}/api/url/shorten`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ url: longUrl }),
+          body: JSON.stringify({ url: longUrl, expiresAt }),
         });
         const data = await response.json();
         if (!response.ok) {
@@ -25,21 +28,10 @@ export const useUrlStore = defineStore("url", {
         }
 
         // Use the short URL from the API response
-        const shortUrl =
-          data.shortUrl || `${window.location.origin}/${data.shortId}`;
-
-        // Add to local state
-        this.urls.unshift({
-          originalUrl: longUrl,
-          shortUrl,
-          clicks: 0,
-          createdAt: new Date(),
-          active: true,
-        });
-
-        return shortUrl;
+        this.currentUrl = data;
+        this.urls.unshift(data);
       } catch (error) {
-        this.error = error.message || "Error shortening URL";
+        this.error = error.message;
         throw error;
       } finally {
         this.loading = false;
@@ -50,7 +42,7 @@ export const useUrlStore = defineStore("url", {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch("/api/urls");
+        const response = await fetch(`${API_BASE_URL}/api/url/urls`);
         if (!response.ok) {
           throw new Error("Failed to fetch URLs");
         }
@@ -68,12 +60,41 @@ export const useUrlStore = defineStore("url", {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`/api/analytics/${shortId}`);
+        const response = await fetch(
+          `${API_BASE_URL}/api/analytics/${shortId}`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch URL analytics");
         }
         const data = await response.json();
         this.currentUrl = data;
+        return data;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async editOriginalUrl(shortId, originalUrl) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/url/${shortId}/edit-original`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ originalUrl }),
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to update URL");
+        }
+        const data = await response.json();
         return data;
       } catch (error) {
         this.error = error.message;

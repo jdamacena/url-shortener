@@ -50,15 +50,16 @@
 </template>
 
 <script>
+import { useUrlStore } from '../stores/urlStore'
 import { ref, onMounted, computed, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
 import { useAuthStore } from '../stores/authStore'
 
 export default {
   name: 'UrlAnalytics',
   setup() {
     const route = useRoute()
+    const urlStore = useUrlStore()
     const analytics = ref(null)
     const loading = ref(true)
     const error = ref('')
@@ -76,10 +77,9 @@ export default {
       loading.value = true
       error.value = ''
       try {
-        const { data } = await axios.get(`/api/analytics/${route.params.shortUrl}`)
-        analytics.value = data
+        analytics.value = await urlStore.fetchUrlAnalytics(route.params.shortUrl)
       } catch (e) {
-        error.value = e?.response?.data?.error || 'Failed to load analytics.'
+        error.value = e?.message || 'Failed to load analytics.'
       } finally {
         loading.value = false
       }
@@ -92,15 +92,11 @@ export default {
 
     async function submitEditOriginalUrl() {
       try {
-        const res = await axios.post(`/url/${analytics.value.shortUrl}/edit-original`, { originalUrl: editOriginalUrl.value })
-        if (res.data.success) {
-          editingOriginalUrl.value = false
-          await fetchAnalytics()
-        } else {
-          error.value = res.data.error || 'Failed to update URL'
-        }
+        await urlStore.editOriginalUrl(analytics.value.shortUrl, editOriginalUrl.value)
+        editingOriginalUrl.value = false
+        await fetchAnalytics()
       } catch (e) {
-        error.value = e?.response?.data?.error || 'Failed to update URL'
+        error.value = e?.message || 'Failed to update URL'
       }
     }
 

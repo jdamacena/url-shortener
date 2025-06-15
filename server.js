@@ -10,9 +10,9 @@ import { dirname } from "path";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import path from "path";
+import cors from "cors";
 import User from "./models/user.js";
 import Url from "./models/url.js";
-import apiRouter from "./routes/api.js";
 import authRouter from "./routes/auth.js";
 import urlRouter from "./routes/url.js";
 import analyticsRouter from "./routes/analytics.js";
@@ -39,7 +39,9 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure:
+        process.env.NODE_ENV === "production" &&
+        process.env.USE_HTTPS === "true",
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     },
   })
@@ -47,6 +49,12 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true, // Allow cookies to be sent with requests
+  })
+);
 
 // Configure Passport
 passport.use(
@@ -84,10 +92,9 @@ passport.deserializeUser(async (id, done) => {
 app.use(express.static(path.join(__dirname, "dist")));
 
 // API Routes first
-app.use("/api", apiRouter);
-app.use("/auth", authRouter);
-app.use("/url", urlRouter);
-app.use("/analytics", analyticsRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/url", urlRouter);
+app.use("/api/analytics", analyticsRouter);
 
 // URL Shortener redirect route - matches shortUrls only using RegExp for Express 5
 app.get(/^\/([A-Za-z0-9_-]+)$/, async (req, res) => {
