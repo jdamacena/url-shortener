@@ -42,7 +42,9 @@ export const useUrlStore = defineStore("url", {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${API_BASE_URL}/api/url/urls`);
+        const response = await fetch(`${API_BASE_URL}/api/url/urls`, {
+          credentials: "include", // Include cookies for authentication
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch URLs");
         }
