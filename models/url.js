@@ -1,8 +1,19 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const urlSchema = new mongoose.Schema({
     originalUrl: { type: String, required: true },
     shortUrl: { type: String, required: true, unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    clicks: { type: Number, default: 0 },
+    active: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+    lastAccessedAt: { type: Date },
+    clickHistory: [{
+        timestamp: { type: Date, default: Date.now },
+        referrer: String,
+        ip: String,
+        userAgent: String
+    }],
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to the User model
     clickCount: { type: Number, default: 0 }, // Track the number of clicks
     createdAt: { type: Date, default: Date.now }, // Timestamp when the URL was created
@@ -20,4 +31,4 @@ const urlSchema = new mongoose.Schema({
 
 const Url = mongoose.model('Url', urlSchema);
 
-module.exports = Url;
+export default Url;

@@ -1,282 +1,128 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const shortid = require("shortid");
-const passport = require("passport");
-const session = require("express-session");
-const flash = require("connect-flash");
-const User = require("./models/user");
-const Url = require("./models/url");
-const LocalStrategy = require("passport-local").Strategy;
-const bcrypt = require("bcryptjs");
-const validator = require("validator");
+import 'dotenv/config'
+import express from 'express'
+import mongoose from 'mongoose'
+import bodyParser from 'body-parser'
+import passport from 'passport'
+import session from 'express-session'
+import flash from 'connect-flash'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+import { Strategy as LocalStrategy } from 'passport-local'
+import bcrypt from 'bcryptjs'
+import path from 'path'
+import User from './models/user.js'
+import Url from './models/url.js'
+import apiRouter from './routes/api.js'
 
-const app = express();
-const PORT = process.env.PORT;
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+const app = express()
+const PORT = process.env.PORT || 3000
 
 // Connect to MongoDB
-mongoose.connect(
-  process.env.MONGODB_URI,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  }
-);
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
 
-// Set EJS as the templating engine
-app.set("view engine", "ejs");
+// Middleware Setup
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+  },
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+app.use(flash())
 
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false, // Set to true if using HTTPS
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    },
-  })
-);
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash());
-
-// Passport Local Strategy for authentication
-passport.use(
-  new LocalStrategy(async (username, password, done) => {
-    try {
-      const user = await User.findOne({ username });
-      if (!user) {
-        return done(null, false, { message: "Incorrect username." });
-      }
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return done(null, false, { message: "Incorrect password." });
-      }
-      return done(null, user);
-    } catch (err) {
-      return done(err);
+// Configure Passport
+passport.use(new LocalStrategy(async (username, password, done) => {
+  try {
+    const user = await User.findOne({ username })
+    if (!user) {
+      return done(null, false, { message: "Incorrect username." })
     }
-  })
-);
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return done(null, false, { message: "Incorrect password." })
+    }
+    return done(null, user)
+  } catch (err) {
+    return done(err)
+  }
+}))
 
 passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
+  done(null, user.id)
+})
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);
-    done(null, user);
+    const user = await User.findById(id)
+    done(null, user)
   } catch (err) {
-    done(err);
+    done(err)
   }
-});
+})
 
-// Routes
-app.get("/", (req, res) => {
-  res.render("index", { user: req.user });
-});
+// Serve static files
+app.use(express.static(path.join(__dirname, 'dist')))
 
-app.post("/shorten", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res
-      .status(401)
-      .json({ error: "You must be logged in to shorten URLs" });
-  }
+// API Routes first
+app.use('/api', apiRouter)
 
-  const originalUrl = req.body.url;
-
-  // Validate the URL before saving
-  if (!validator.isURL(originalUrl, { require_protocol: true })) {
-    return res.status(400).json({ error: "Invalid URL format" });
-  }
-
-  const shortUrl = shortid.generate();
-  let expiresAt = req.body.expiresAt;
-  if (expiresAt) {
-    // Convert to Date object if provided
-    expiresAt = new Date(expiresAt);
-    if (isNaN(expiresAt.getTime())) expiresAt = undefined;
-  } else {
-    expiresAt = undefined;
-  }
-
-  const newUrl = new Url({
-    originalUrl,
-    shortUrl,
-    userId: req.user.id, // Save the user ID
-    expiresAt,
-  });
-
-  await newUrl.save();
-  // Respond with JSON instead of HTML
-  res.json({
-    shortUrl: `${req.protocol}://${req.get("host")}/${shortUrl}`,
-    originalUrl,
-    code: shortUrl,
-  });
-});
-
-// User Registration
-app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
-
-  // Check if the username already exists
-  const existingUser = await User.findOne({ username });
-  if (existingUser) {
-    // Render the registration page again with an error message
-    return res.status(400).render("register", { user: req.user, error: "Username already exists" });
-  }
-
-  // Hash the password before saving
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = new User({ username, password: hashedPassword });
-  await newUser.save();
-  res.redirect("/login");
-});
-
-// User Login
-app.post(
-  "/login",
-  passport.authenticate("local", {
-    successRedirect: "/dashboard",
-    failureRedirect: "/login",
-    failureFlash: true, // Enable flash messages on failure
-  })
-);
-
-app.get("/login", (req, res) => {
-  res.render("login", { 
-    user: req.user, 
-    error: req.flash("error")[0] // Pass the first error message, if any
-  });
-});
-
-// User Logout
-app.get("/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      return next(err);
+// URL Shortener redirect route - matches shortUrls only using RegExp for Express 5
+app.get(/^\/([A-Za-z0-9_-]+)$/, async (req, res) => {
+  try {
+    const shortUrl = req.params[0];
+    const url = await Url.findOne({ shortUrl })
+    if (!url) {
+      return res.status(404).json({ error: "URL not found" })
     }
-    res.redirect("/"); // Redirect to home after logout
-  });
-});
-
-// User Dashboard
-app.get("/dashboard", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.redirect("/login"); // Redirect to login if not authenticated
-  }
-
-  // Fetch the user's shortened URLs
-  const urls = await Url.find({ userId: req.user.id }); // Assuming you have a userId field in your Url schema
-  res.render("dashboard", { urls, user: req.user }); // Render the dashboard with the user's URLs
-});
-
-// API endpoint to provide user info
-app.get("/api/user-info", (req, res) => {
-  if (req.isAuthenticated() && req.user) {
-    res.json({ username: req.user.username });
-  } else {
-    res.json({});
-  }
-});
-
-app.get("/register", (req, res) => {
-  if (req.isAuthenticated()) {
-    return res.redirect("/dashboard");
-  }
-  res.render("register", { user: req.user });
-});
-
-app.get("/url-not-found", (req, res) => {
-  res.render("url-not-found", { user: req.user });
-});
-
-app.get("/url/:shortUrl", async (req, res) => {
-  const url = await Url.findOne({
-    shortUrl: req.params.shortUrl,
-    userId: req.user && req.user.id,
-  });
-  if (!url) {
-    return res.status(404).render("url-not-found", { user: req.user });
-  }
-  res.render("url-analytics", { url, user: req.user });
-});
-
-// Toggle active state for a URL (activate/deactivate)
-app.post("/url/:id/toggle-active", async (req, res) => {
-  if (!req.isAuthenticated())
-    return res.status(401).json({ error: "Unauthorized" });
-  const url = await Url.findOne({ _id: req.params.id, userId: req.user.id });
-  if (!url) return res.status(404).json({ error: "URL not found" });
-  url.active = url.active === false ? true : false;
-  await url.save();
-  res.json({ success: true, active: url.active });
-});
-
-// Allow editing the original URL for a short URL
-app.post("/url/:shortUrl/edit-original", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const { shortUrl } = req.params;
-  const { originalUrl } = req.body;
-  if (!validator.isURL(originalUrl, { require_protocol: true })) {
-    return res.status(400).json({ error: "Invalid URL format" });
-  }
-  const url = await Url.findOne({ shortUrl, userId: req.user.id });
-  if (!url) {
-    return res.status(404).json({ error: "URL not found" });
-  }
-  url.originalUrl = originalUrl;
-  await url.save();
-  res.json({ success: true });
-});
-
-app.get("/:shortUrl", async (req, res) => {
-  const url = await Url.findOne({ shortUrl: req.params.shortUrl });
-  if (url) {
+    
     // Block if deactivated
     if (url.active === false) {
-      return res.status(404).render("url-not-found", { user: req.user });
+      return res.status(404).json({ error: "URL is deactivated" })
     }
+
     // Check for expiration
     if (url.expiresAt && new Date() > url.expiresAt) {
-      return res.status(404).render("url-not-found", { user: req.user });
+      return res.status(404).json({ error: "URL has expired" })
     }
-    url.clickCount += 1;
-    url.lastAccessedAt = new Date();
-    // Capture both HTTP referer and custom ?refer= param
-    const httpReferer = req.get("referer");
-    const customRefer = req.query.refer;
-    url.referers = url.referers || [];
-    if (httpReferer) url.referers.push(httpReferer);
-    if (customRefer) url.referers.push(`custom:${customRefer}`);
-    url.accessLogs = url.accessLogs || [];
-    url.accessLogs.push({
-      referer: customRefer ? `custom:${customRefer}` : httpReferer,
-      ip: req.ip,
+    
+    // Update analytics
+    url.clicks = (url.clicks || 0) + 1
+    url.lastAccessedAt = new Date()
+    url.clickHistory = url.clickHistory || []
+    url.clickHistory.push({
+      timestamp: new Date(),
+      referrer: req.get("referer") || null,
       userAgent: req.get("user-agent"),
-    });
-    await url.save();
-    return res.redirect(url.originalUrl);
+      ip: req.ip
+    })
+    
+    await url.save()
+    return res.redirect(url.originalUrl)
+  } catch (error) {
+    console.error("Error redirecting:", error)
+    return res.status(500).json({ error: "Internal server error" })
   }
-  res.status(404).render("url-not-found", { user: req.user });
-});
+})
 
-// Handle 404 - Keep this as the last route
-app.use((req, res) => {
-  res.status(404).render("404", { user: req.user });
-});
+// Serve Vue.js app for all remaining routes
+app.get('/*splat', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
+})
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+  console.log(`Server is running on http://localhost:${PORT}`)
+})
