@@ -1,13 +1,21 @@
 <template>
-  <header class="mb-8 py-4 border-b border-blue-100 flex flex-col items-center">
-    <nav class="mb-2">
-      <router-link to="/" class="mx-2 text-blue-700 font-bold">Home</router-link>
-      <router-link v-if="authStore.user" to="/dashboard" class="mx-2 text-blue-700 font-bold">Dashboard</router-link>
+  <header class="bg-gradient-to-r from-blue-900 to-blue-500 shadow-lg py-3 px-6 flex items-center justify-between w-full sticky top-0 z-30">
+    <!-- Branding -->
+    <router-link to="/" class="flex items-center gap-3 select-none">
+      <img src="/favicon.ico" alt="Logo" class="w-8 h-8" />
+      <span class="text-white text-2xl font-extrabold tracking-tight drop-shadow">URL Shortener</span>
+    </router-link>
+    <!-- Navigation -->
+    <nav class="flex items-center gap-4">
+      <router-link to="/" class="text-white/90 hover:text-white font-semibold px-3 py-2 rounded transition-colors">Home</router-link>
+      <router-link v-if="authStore.user" to="/dashboard" class="text-white/90 hover:text-white font-semibold px-3 py-2 rounded transition-colors">Dashboard</router-link>
+      <router-link v-if="!authStore.user" to="/login" class="text-white/90 hover:text-white font-semibold px-3 py-2 rounded transition-colors">Login</router-link>
+      <router-link v-if="!authStore.user" to="/register" class="text-white/90 hover:text-white font-semibold px-3 py-2 rounded transition-colors">Register</router-link>
+      <div v-if="authStore.user" class="flex items-center gap-2 ml-4">
+        <span class="text-white/80 text-sm">{{ authStore.user.username }}</span>
+        <button @click="logout" class="text-white/80 hover:text-red-200 font-semibold underline px-2 py-1 rounded transition-colors">Logout</button>
+      </div>
     </nav>
-    <div v-if="authStore.user" class="text-gray-700 text-sm mt-2">
-      Logged in as <span class="font-bold">{{ authStore.user.username }}</span>
-      <button @click="logout" class="ml-4 text-red-600 underline">Logout</button>
-    </div>
   </header>
 </template>
 

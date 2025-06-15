@@ -7,6 +7,7 @@ import Login from "./components/Login.vue";
 import Register from "./components/Register.vue";
 import UrlAnalytics from "./components/UrlAnalytics.vue";
 import NotFound from "./components/NotFound.vue";
+import "./assets/styles/main.css";
 
 const router = createRouter({
   history: createWebHistory(),
