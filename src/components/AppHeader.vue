@@ -21,13 +21,16 @@
 
 <script>
 import { useAuthStore } from '../stores/authStore'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'AppHeader',
   setup() {
     const authStore = useAuthStore()
-    function logout() {
-      authStore.logout()
+    const router = useRouter()
+    async function logout() {
+      await authStore.logout()
+      router.push('/')
     }
     return { authStore, logout }
   }
