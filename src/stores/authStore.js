@@ -67,15 +67,22 @@ export const useAuthStore = defineStore("auth", {
       }
     },
     async fetchUser() {
+      this.loading = true;
+      this.error = null;
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/user`);
+        const response = await fetch(`${API_BASE_URL}/api/auth/user`, {
+          credentials: "include", // Include cookies for authentication
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch user");
         }
         const data = await response.json();
         this.user = data.user;
       } catch (error) {
-        console.error("Failed to fetch user:", error);
+        this.user = null; // Clear user if not authenticated
+        this.error = error.message;
+      } finally {
+        this.loading = false;
       }
     },
   },

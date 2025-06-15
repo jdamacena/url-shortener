@@ -11,13 +11,23 @@
 <script>
 import AppHeader from './components/AppHeader.vue'
 import AppFooter from './components/AppFooter.vue'
+import { useAuthStore } from './stores/authStore';
+import { onMounted } from 'vue';
 
 export default {
   name: 'App',
   components: {
     AppHeader,
     AppFooter
-  }
+  },
+  setup() {
+    const authStore = useAuthStore();
+
+    // Revalidate user session on app load
+    onMounted(() => {
+      authStore.fetchUser();
+    });
+  },
 }
 </script>
 
