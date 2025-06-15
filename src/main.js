@@ -7,6 +7,7 @@ import Login from "./components/Login.vue";
 import Register from "./components/Register.vue";
 import UrlAnalytics from "./components/UrlAnalytics.vue";
 import NotFound from "./components/NotFound.vue";
+import LinkExpired from "./components/LinkExpired.vue";
 import "./assets/styles/main.css";
 
 const router = createRouter({
@@ -20,6 +21,7 @@ const router = createRouter({
     { path: "/login", component: Login },
     { path: "/register", component: Register },
     { path: "/analytics/:shortUrl", component: UrlAnalytics },
+    { path: "/expired", component: LinkExpired },
     { path: "/:pathMatch(.*)*", name: "NotFound", component: NotFound },
   ],
 });
