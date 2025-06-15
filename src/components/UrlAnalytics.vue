@@ -1,199 +1,139 @@
 <template>
-    <div class="analytics-container">
-        <h2>URL Analytics</h2>
-        <div v-if="loading" class="loading">
-            Loading analytics...
-        </div>
-        <div v-else-if="error" class="error">
-            {{ error }}
-        </div>
-        <div v-else class="analytics-content">
-            <div class="url-info">
-                <h3>URL Information</h3>
-                <p><strong>Original URL:</strong> <a :href="urlData.longUrl" target="_blank">{{ urlData.longUrl }}</a>
-                </p>
-                <p><strong>Short URL:</strong> <a :href="shortUrl" target="_blank">{{ shortUrl }}</a></p>
-                <p><strong>Created:</strong> {{ formatDate(urlData.createdAt) }}</p>
-            </div>
-
-            <div class="stats">
-                <h3>Statistics</h3>
-                <div class="stat-card">
-                    <div class="stat-value">{{ urlData.clicks }}</div>
-                    <div class="stat-label">Total Clicks</div>
-                </div>
-            </div>
-
-            <div v-if="urlData.clickHistory && urlData.clickHistory.length" class="click-history">
-                <h3>Click History</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Referrer</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(click, index) in urlData.clickHistory" :key="index">
-                            <td>{{ formatDate(click.timestamp) }}</td>
-                            <td>{{ formatTime(click.timestamp) }}</td>
-                            <td>{{ click.referrer || 'Direct' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <div class="max-w-2xl mx-auto mt-10">
+    <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">URL Analytics</h2>
+    <div v-if="loading" class="text-center text-gray-500">Loading...</div>
+    <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
+    <div v-else-if="!analytics" class="text-center text-gray-500">No analytics found.</div>
+    <div v-else>
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="mb-2"><span class="font-bold">Short URL:</span> <a :href="'/' + analytics.shortUrl" target="_blank" class="text-blue-700 underline">/{{ analytics.shortUrl }}</a></div>
+        <div class="mb-2"><span class="font-bold">Original URL:</span> <span class="break-all">{{ analytics.originalUrl }}</span></div>
+        <div class="mb-2"><span class="font-bold">Clicks:</span> {{ analytics.clicks }}</div>
+        <div class="mb-2"><span class="font-bold">Active:</span> <span :class="analytics.active ? 'text-green-600' : 'text-red-600'">{{ analytics.active ? 'Yes' : 'No' }}</span></div>
+        <div class="mb-2" v-if="analytics.expiresAt"><span class="font-bold">Expires At:</span> {{ new Date(analytics.expiresAt).toLocaleString() }}</div>
+      </div>
+      <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-xl font-bold mb-4">Click History</h3>
+        <div v-if="!analytics.clickHistory || analytics.clickHistory.length === 0" class="text-gray-500">No clicks yet.</div>
+        <table v-else class="w-full">
+          <thead>
+            <tr class="bg-blue-100">
+              <th class="p-2 text-left">Timestamp</th>
+              <th class="p-2 text-left">Referrer</th>
+              <th class="p-2 text-left">User Agent</th>
+              <th class="p-2 text-left">IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(click, idx) in analytics.clickHistory" :key="idx">
+              <td class="p-2">{{ new Date(click.timestamp).toLocaleString() }}</td>
+              <td class="p-2">{{ click.referrer || '-' }}</td>
+              <td class="p-2">{{ click.userAgent || '-' }}</td>
+              <td class="p-2">{{ click.ip || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import axios from 'axios'
 
 export default {
-    name: 'UrlAnalytics',
-    setup() {
-        const route = useRoute()
-        const urlData = ref(null)
-        const loading = ref(true)
-        const error = ref(null)
+  name: 'UrlAnalytics',
+  setup() {
+    const route = useRoute()
+    const analytics = ref(null)
+    const loading = ref(true)
+    const error = ref('')
 
-        const shortUrl = computed(() => {
-            if (!urlData.value) return ''
-            return `${window.location.origin}/${urlData.value.shortId}`
-        })
+    onMounted(async () => {
+      loading.value = true
+      error.value = ''
+      try {
+        const { data } = await axios.get(`/api/analytics/${route.params.shortUrl}`)
+        analytics.value = data
+      } catch (e) {
+        error.value = e?.response?.data?.error || 'Failed to load analytics.'
+      } finally {
+        loading.value = false
+      }
+    })
 
-        const fetchAnalytics = async () => {
-            try {
-                const response = await fetch(`/api/analytics/${route.params.id}`)
-                if (!response.ok) {
-                    throw new Error('Failed to fetch analytics')
-                }
-                urlData.value = await response.json()
-            } catch (err) {
-                error.value = 'Failed to load analytics data'
-                console.error(err)
-            } finally {
-                loading.value = false
-            }
-        }
-
-        const formatDate = (date) => {
-            return new Date(date).toLocaleDateString()
-        }
-
-        const formatTime = (date) => {
-            return new Date(date).toLocaleTimeString()
-        }
-
-        onMounted(() => {
-            fetchAnalytics()
-        })
-
-        return {
-            urlData,
-            loading,
-            error,
-            shortUrl,
-            formatDate,
-            formatTime
-        }
-    }
+    return { analytics, loading, error }
+  }
 }
 </script>
 
 <style scoped>
-.analytics-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
+.max-w-2xl {
+    max-width: 42rem;
 }
 
-h2 {
-    color: #2c3e50;
-    margin-bottom: 2rem;
+.mx-auto {
+    margin-left: auto;
+    margin-right: auto;
 }
 
-h3 {
-    color: #2c3e50;
-    margin-bottom: 1rem;
+.mt-10 {
+    margin-top: 2.5rem;
 }
 
-.loading {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
+.bg-white {
+    background-color: #fff;
 }
 
-.error {
-    color: #dc3545;
-    padding: 1rem;
-    background-color: #f8d7da;
-    border-radius: 4px;
-    margin-bottom: 1rem;
+.shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.url-info {
-    background-color: #f8f9fa;
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+.p-6 {
     padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
 }
 
-.url-info p {
-    margin: 0.5rem 0;
+.text-3xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
 }
 
-.url-info a {
-    color: #42b983;
-    text-decoration: none;
-    word-break: break-all;
+.font-bold {
+    font-weight: 700;
 }
 
-.url-info a:hover {
+.text-blue-700 {
+    color: #1d4ed8;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.text-red-600 {
+    color: #dc2626;
+}
+
+.underline {
     text-decoration: underline;
 }
 
-.stats {
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background-color: #42b983;
-    color: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.stat-value {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    font-size: 1rem;
-    opacity: 0.9;
-}
-
-.click-history table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-
-.click-history th,
-.click-history td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.click-history th {
-    background-color: #f8f9fa;
-    font-weight: 600;
+.break-all {
+    word-break: break-all;
 }
 
 @media (max-width: 640px) {

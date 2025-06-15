@@ -1,165 +1,169 @@
 <template>
-    <div class="dashboard">
-        <h2>Your Shortened URLs</h2>
-        <div v-if="urlStore.loading" class="loading">
-            <div class="loader"></div>
-            Loading...
-        </div>
-        <div v-else-if="urlStore.error" class="error">
-            {{ urlStore.error }}
-        </div>
-        <div v-else class="url-list">
-            <div v-for="(url, index) in urlStore.urls" :key="index" class="url-item">
-                <div class="url-details">
-                    <a :href="url.shortUrl" target="_blank" class="short-url">{{ url.shortUrl }}</a>
-                    <span class="long-url">{{ url.longUrl }}</span>
-                </div>
-                <button @click="copyToClipboard(url.shortUrl)" class="copy-btn">Copy</button>
-            </div>
-        </div>
+  <div class="max-w-3xl mx-auto mt-10">
+    <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">Your Shortened URLs</h2>
+    <div v-if="urlStore.loading" class="text-center text-gray-500">Loading...</div>
+    <div v-else-if="urlStore.urls.length === 0" class="text-center text-gray-500">No URLs found. Start by shortening a URL!</div>
+    <div v-else>
+      <table class="w-full bg-white shadow rounded-lg">
+        <thead>
+          <tr class="bg-blue-100">
+            <th class="p-3 text-left">Short URL</th>
+            <th class="p-3 text-left">Original URL</th>
+            <th class="p-3 text-center">Clicks</th>
+            <th class="p-3 text-center">Active</th>
+            <th class="p-3 text-center">Analytics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="url in urlStore.urls" :key="url._id" :class="{'bg-gray-50': !url.active}">
+            <td class="p-3">
+              <a :href="`/${url.shortUrl}`" target="_blank" class="text-blue-700 underline">/{{ url.shortUrl }}</a>
+            </td>
+            <td class="p-3 truncate max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
+            <td class="p-3 text-center">{{ url.clicks }}</td>
+            <td class="p-3 text-center">
+              <button @click="toggleActive(url)" :class="url.active ? 'text-green-600' : 'text-red-600'">
+                {{ url.active ? 'Active' : 'Inactive' }}
+              </button>
+            </td>
+            <td class="p-3 text-center">
+              <router-link :to="`/analytics/${url.shortUrl}`" class="text-blue-500 underline">View</router-link>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+    <div v-if="urlStore.error" class="mt-4 text-red-600 text-center">{{ urlStore.error }}</div>
+  </div>
 </template>
 
 <script>
 import { onMounted } from 'vue'
 import { useUrlStore } from '../stores/urlStore'
-import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/authStore'
 
 export default {
-    name: 'Dashboard',
-    setup() {
-        const urlStore = useUrlStore()
-        const router = useRouter()
+  name: 'Dashboard',
+  setup() {
+    const urlStore = useUrlStore()
+    const authStore = useAuthStore()
 
-        onMounted(async () => {
-            try {
-                await urlStore.fetchUrls()
-            } catch (error) {
-                console.error('Error fetching URLs:', error)
-            }
-        })
+    onMounted(() => {
+      if (authStore.user) {
+        urlStore.fetchUrls()
+      }
+    })
 
-        const viewAnalytics = (shortId) => {
-            router.push(`/analytics/${shortId}`)
-        }
-
-        const copyToClipboard = async (url) => {
-            try {
-                await navigator.clipboard.writeText(url)
-                // You could add a toast notification here
-            } catch (err) {
-                console.error('Failed to copy:', err)
-            }
-        }
-
-        return {
-            urlStore,
-            viewAnalytics,
-            copyToClipboard
-        }
+    async function toggleActive(url) {
+      try {
+        await urlStore.toggleActive(url)
+      } catch (e) {
+        // error handled in store
+      }
     }
+
+    return { urlStore, authStore, toggleActive }
+  }
 }
 </script>
 
 <style scoped>
-.dashboard {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+.max-w-3xl {
+    max-width: 768px;
 }
 
-.loader {
-    border: 3px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 3px solid #42b983;
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 10px;
+.mt-10 {
+    margin-top: 2.5rem;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+.text-3xl {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
 }
 
-.loading {
+.font-bold {
+    font-weight: 700;
+}
+
+.text-blue-700 {
+    color: #1d4ed8;
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.text-center {
     text-align: center;
-    padding: 40px;
-    color: #666;
 }
 
-.error {
-    color: #dc3545;
-    padding: 20px;
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.bg-white {
+    background-color: #ffffff;
+}
+
+.shadow {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+.bg-blue-100 {
+    background-color: #ebf8ff;
+}
+
+.p-3 {
+    padding: 0.75rem;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-center {
     text-align: center;
-    background-color: #f8d7da;
-    border-radius: 4px;
-    margin-bottom: 20px;
 }
 
-.url-list {
-    display: grid;
-    gap: 20px;
-}
-
-.url-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.url-info {
-    margin-bottom: 15px;
-}
-
-.original-url {
-    color: #666;
-    font-size: 0.9em;
+.break-all {
     word-break: break-all;
 }
 
-.short-url {
-    color: #42b983;
-    font-weight: bold;
-    word-break: break-all;
+.border-b {
+    border-bottom-width: 1px;
 }
 
-.actions {
-    display: flex;
-    gap: 10px;
+.text-green-600 {
+    color: #16a34a;
 }
 
-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.2s;
+.text-red-600 {
+    color: #dc2626;
 }
 
-.copy-btn {
-    background-color: #42b983;
-    color: white;
+.mt-4 {
+    margin-top: 1rem;
 }
 
-.copy-btn:hover {
-    background-color: #3aa876;
+.text-red-600 {
+    color: #dc2626;
 }
 
-.analytics-btn {
-    background-color: #4a5568;
-    color: white;
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.analytics-btn:hover {
-    background-color: #2d3748;
+.max-w-xs {
+    max-width: 20rem;
 }
 </style>

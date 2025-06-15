@@ -1,115 +1,61 @@
 <template>
-    <div class="url-shortener">
-        <form @submit.prevent="shortenUrl">
-            <div class="input-group">
-                <input type="url" v-model="longUrl" placeholder="Enter your URL here (e.g., https://example.com)"
-                    required pattern="https?://.*" title="Please enter a valid URL starting with http:// or https://">
-                <button type="submit" :disabled="urlStore.loading">
-                    {{ urlStore.loading ? 'Shortening...' : 'Shorten' }}
-                </button>
-            </div>
-        </form>
-
-        <div v-if="urlStore.error" class="error-message">
-            {{ urlStore.error }}
-        </div>
-
-        <div v-if="shortUrl" class="result">
-            <p>Your shortened URL:</p>
-            <div class="short-url">
-                <a :href="shortUrl" target="_blank">{{ shortUrl }}</a>
-                <button @click="copyToClipboard">Copy</button>
-            </div>
-        </div>
-    </div>
+  <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md mx-auto mt-10">
+    <template v-if="!authStore.user">
+      <h1 class="text-4xl font-extrabold text-blue-700 mb-4 drop-shadow">Welcome to URL Shortener</h1>
+      <p class="text-lg text-gray-700 mb-6">Easily create and manage short links. Sign up or log in to get started!</p>
+      <div class="flex justify-center space-x-4 mb-6">
+        <router-link to="/login" class="bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg p-3 w-32 shadow transition">Login</router-link>
+        <router-link to="/register" class="bg-gray-200 hover:bg-gray-300 text-blue-700 font-bold rounded-lg p-3 w-32 shadow transition">Register</router-link>
+      </div>
+      <div class="mt-8">
+        <img src="/favicon.ico" alt="URL Shortener" class="mx-auto w-16 h-16 opacity-80" />
+      </div>
+    </template>
+    <template v-else>
+      <h1 class="text-4xl font-extrabold text-center text-blue-700 mb-6 drop-shadow">Shorten a URL</h1>
+      <form @submit.prevent="shortenUrl">
+        <input v-model="longUrl" type="url" required placeholder="Paste your long URL here..." class="w-full p-3 border rounded mb-4" />
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg p-3 shadow transition">Shorten</button>
+      </form>
+      <div v-if="shortUrl" class="mt-4 text-center">
+        <p class="text-green-700 font-bold">Short URL:</p>
+        <a :href="shortUrl" target="_blank" class="text-blue-700 underline">{{ shortUrl }}</a>
+      </div>
+      <div v-if="error" class="mt-4 text-red-600">{{ error }}</div>
+    </template>
+  </div>
 </template>
 
 <script>
+import { ref } from 'vue'
+import { useAuthStore } from '../stores/authStore'
 import { useUrlStore } from '../stores/urlStore'
 
 export default {
-    name: 'UrlShortener',
-    setup() {
-        const urlStore = useUrlStore()
-        return { urlStore }
-    },
-    data() {
-        return {
-            longUrl: '',
-            shortUrl: ''
-        }
-    },
-    methods: {
-        async shortenUrl() {
-            try {
-                this.shortUrl = await this.urlStore.shortenUrl(this.longUrl)
-            } catch (error) {
-                console.error('Error shortening URL:', error)
-            }
-        },
-        copyToClipboard() {
-            navigator.clipboard.writeText(this.shortUrl);
-        }
+  name: 'UrlShortener',
+  setup() {
+    const authStore = useAuthStore()
+    const urlStore = useUrlStore()
+    const longUrl = ref('')
+    const shortUrl = ref('')
+    const error = ref('')
+
+    async function shortenUrl() {
+      error.value = ''
+      shortUrl.value = ''
+      try {
+        const result = await urlStore.shortenUrl(longUrl.value)
+        shortUrl.value = result.shortUrl || result.shortId || ''
+      } catch (e) {
+        error.value = e?.message || 'Failed to shorten URL.'
+      }
     }
+
+    return { authStore, urlStore, longUrl, shortUrl, error, shortenUrl }
+  }
 }
 </script>
 
 <style scoped>
-.url-shortener {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.input-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-button {
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-.result {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-}
-
-.short-url {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.error-message {
-    color: #dc3545;
-    padding: 10px;
-    margin: 10px 0;
-    background-color: #f8d7da;
-    border-radius: 4px;
-    text-align: center;
-}
+.bg-white { background: #fff; }
 </style>
