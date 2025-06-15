@@ -7,7 +7,18 @@
     <div v-else>
       <div class="bg-white shadow rounded-lg p-6 mb-6">
         <div class="mb-2"><span class="font-bold">Short URL:</span> <a :href="'/' + analytics.shortUrl" target="_blank" class="text-blue-700 underline">/{{ analytics.shortUrl }}</a></div>
-        <div class="mb-2"><span class="font-bold">Original URL:</span> <span class="break-all">{{ analytics.originalUrl }}</span></div>
+        <div class="mb-2 flex items-center gap-2">
+          <span class="font-bold">Original URL:</span>
+          <span v-if="!editingOriginalUrl" class="break-all" id="original-url-link-group">
+            {{ analytics.originalUrl }}
+            <button v-if="canEdit" @click="editingOriginalUrl = true" id="show-edit-original-url" class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+          </span>
+          <form v-else @submit.prevent="submitEditOriginalUrl" id="edit-original-url-form" class="flex items-center gap-2">
+            <input v-model="editOriginalUrl" type="url" required class="border rounded p-1 w-64" />
+            <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Save</button>
+            <button type="button" @click="cancelEdit" id="cancel-edit-original-url" class="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300">Cancel</button>
+          </form>
+        </div>
         <div class="mb-2"><span class="font-bold">Clicks:</span> {{ analytics.clicks }}</div>
         <div class="mb-2"><span class="font-bold">Active:</span> <span :class="analytics.active ? 'text-green-600' : 'text-red-600'">{{ analytics.active ? 'Yes' : 'No' }}</span></div>
         <div class="mb-2" v-if="analytics.expiresAt"><span class="font-bold">Expires At:</span> {{ new Date(analytics.expiresAt).toLocaleString() }}</div>
@@ -39,9 +50,10 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { useAuthStore } from '../stores/authStore'
 
 export default {
   name: 'UrlAnalytics',
@@ -50,8 +62,17 @@ export default {
     const analytics = ref(null)
     const loading = ref(true)
     const error = ref('')
+    const editingOriginalUrl = ref(false)
+    const editOriginalUrl = ref('')
+    const authStore = useAuthStore()
+
+    const canEdit = computed(() => authStore.user)
 
     onMounted(async () => {
+      await fetchAnalytics()
+    })
+
+    async function fetchAnalytics() {
       loading.value = true
       error.value = ''
       try {
@@ -62,9 +83,35 @@ export default {
       } finally {
         loading.value = false
       }
+    }
+
+    function cancelEdit() {
+      editingOriginalUrl.value = false
+      editOriginalUrl.value = analytics.value.originalUrl
+    }
+
+    async function submitEditOriginalUrl() {
+      try {
+        const res = await axios.post(`/url/${analytics.value.shortUrl}/edit-original`, { originalUrl: editOriginalUrl.value })
+        if (res.data.success) {
+          editingOriginalUrl.value = false
+          await fetchAnalytics()
+        } else {
+          error.value = res.data.error || 'Failed to update URL'
+        }
+      } catch (e) {
+        error.value = e?.response?.data?.error || 'Failed to update URL'
+      }
+    }
+
+    // Set initial value for edit field when analytics loads
+    watchEffect(() => {
+      if (analytics.value) {
+        editOriginalUrl.value = analytics.value.originalUrl
+      }
     })
 
-    return { analytics, loading, error }
+    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl }
   }
 }
 </script>

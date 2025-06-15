@@ -12,6 +12,7 @@
             <th class="p-3 text-center">Clicks</th>
             <th class="p-3 text-center">Active</th>
             <th class="p-3 text-center">Analytics</th>
+            <th class="p-3 text-center">Copy</th>
           </tr>
         </thead>
         <tbody>
@@ -29,6 +30,14 @@
             <td class="p-3 text-center">
               <router-link :to="`/analytics/${url.shortUrl}`" class="text-blue-500 underline">View</router-link>
             </td>
+            <td class="p-3 text-center">
+              <button
+                @click="copyLink(url)"
+                :class="copiedUrl === url.shortUrl ? 'text-blue-600' : ''"
+                :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'"
+                class="copy-link-btn underline"
+              >Copy</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -38,7 +47,7 @@
 </template>
 
 <script>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useUrlStore } from '../stores/urlStore'
 import { useAuthStore } from '../stores/authStore'
 
@@ -47,6 +56,7 @@ export default {
   setup() {
     const urlStore = useUrlStore()
     const authStore = useAuthStore()
+    const copiedUrl = ref(null)
 
     onMounted(() => {
       if (authStore.user) {
@@ -62,7 +72,16 @@ export default {
       }
     }
 
-    return { urlStore, authStore, toggleActive }
+    function copyLink(url) {
+      const link = `${window.location.origin}/${url.shortUrl}`
+      navigator.clipboard.writeText(link)
+      copiedUrl.value = url.shortUrl
+      setTimeout(() => {
+        if (copiedUrl.value === url.shortUrl) copiedUrl.value = null
+      }, 1200)
+    }
+
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl }
   }
 }
 </script>
