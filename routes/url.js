@@ -67,4 +67,30 @@ router.get("/urls", async (req, res) => {
   }
 });
 
+// Edit original URL for a short URL
+router.post("/:shortId/edit-original", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  const { originalUrl } = req.body;
+  if (!originalUrl) {
+    return res.status(400).json({ error: "Original URL is required" });
+  }
+  try {
+    const url = await Url.findOne({
+      shortUrl: req.params.shortId,
+      userId: req.user.id,
+    });
+    if (!url) {
+      return res.status(404).json({ error: "URL not found" });
+    }
+    url.originalUrl = originalUrl;
+    await url.save();
+    res.json(url);
+  } catch (error) {
+    console.error("Error updating original URL:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

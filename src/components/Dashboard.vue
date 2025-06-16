@@ -18,7 +18,7 @@
         <tbody>
           <tr v-for="url in urlStore.urls" :key="url._id" :class="{'bg-gray-50': !url.active}">
             <td class="p-3">
-              <a :href="`/${url.shortUrl}`" target="_blank" class="text-blue-700 underline">/{{ url.shortUrl }}</a>
+              <a :href="`${BACKEND_BASE_URL}/${url.shortUrl}`" target="_blank" class="text-blue-700 underline">{{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ url.shortUrl }}</a>
             </td>
             <td class="p-3 truncate max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
             <td class="p-3 text-center">{{ url.clicks }}</td>
@@ -51,6 +51,8 @@ import { ref, onMounted } from 'vue'
 import { useUrlStore } from '../stores/urlStore'
 import { useAuthStore } from '../stores/authStore'
 
+const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:3000';
+
 export default {
   name: 'Dashboard',
   setup() {
@@ -73,7 +75,7 @@ export default {
     }
 
     function copyLink(url) {
-      const link = `${window.location.origin}/${url.shortUrl}`
+      const link = `${BACKEND_BASE_URL}/${url.shortUrl}`
       navigator.clipboard.writeText(link)
       copiedUrl.value = url.shortUrl
       setTimeout(() => {
@@ -81,7 +83,7 @@ export default {
       }, 1200)
     }
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl }
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL }
   }
 }
 </script>

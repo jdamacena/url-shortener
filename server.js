@@ -88,9 +88,6 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Serve static files
-app.use(express.static(path.join(__dirname, "dist")));
-
 // API Routes first
 app.use("/api/auth", authRouter);
 app.use("/api/url", urlRouter);
@@ -145,6 +142,9 @@ app.get(/^\/([A-Za-z0-9_-]+)$/, async (req, res) => {
 app.get(/^\/(?!api\/).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
+
+// Serve static files (after all routes)
+app.use(express.static(path.join(__dirname, "dist")));
 
 // Start the server
 app.listen(PORT, () => {
