@@ -27,10 +27,11 @@ router.post("/shorten", async (req, res) => {
       originalUrl: urlToShorten,
       shortUrl: shortId,
       userId: req.isAuthenticated() ? req.user.id : null,
-      clicks: 0,
+      clickCount: 0,
       active: true,
       createdAt: new Date(),
-      clickHistory: [],
+      accessLogs: [],
+      referers: [],
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
     });
     await newUrl.save();
@@ -53,7 +54,7 @@ router.get("/urls", async (req, res) => {
   try {
     const urls = await Url.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
-      .limit(50);
+      .limit(150);
     res.json(urls);
   } catch (error) {
     console.error("Error fetching URLs:", error);

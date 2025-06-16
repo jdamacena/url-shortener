@@ -19,13 +19,14 @@
             <button type="button" @click="cancelEdit" id="cancel-edit-original-url" class="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300">Cancel</button>
           </form>
         </div>
-        <div class="mb-2"><span class="font-bold">Clicks:</span> {{ analytics.clicks }}</div>
+        <div class="mb-2"><span class="font-bold">Clicks:</span> {{ analytics.clickCount }}</div>
         <div class="mb-2"><span class="font-bold">Active:</span> <span :class="analytics.active ? 'text-green-600' : 'text-red-600'">{{ analytics.active ? 'Yes' : 'No' }}</span></div>
         <div class="mb-2" v-if="analytics.expiresAt"><span class="font-bold">Expires At:</span> {{ new Date(analytics.expiresAt).toLocaleString() }}</div>
+        <div class="mb-2" v-if="analytics.lastAccessedAt"><span class="font-bold">Last Accessed:</span> {{ new Date(analytics.lastAccessedAt).toLocaleString() }}</div>
       </div>
       <div class="bg-white shadow rounded-lg p-6">
-        <h3 class="text-xl font-bold mb-4">Click History</h3>
-        <div v-if="!analytics.clickHistory || analytics.clickHistory.length === 0" class="text-gray-500">No clicks yet.</div>
+        <h3 class="text-xl font-bold mb-4">Access History</h3>
+        <div v-if="!analytics.accessLogs || analytics.accessLogs.length === 0" class="text-gray-500">No access logs yet.</div>
         <table v-else class="w-full">
           <thead>
             <tr class="bg-blue-100">
@@ -36,14 +37,22 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(click, idx) in analytics.clickHistory" :key="idx">
-              <td class="p-2">{{ new Date(click.timestamp).toLocaleString() }}</td>
-              <td class="p-2">{{ click.referrer || '-' }}</td>
-              <td class="p-2">{{ click.userAgent || '-' }}</td>
-              <td class="p-2">{{ click.ip || '-' }}</td>
+            <tr v-for="(log, idx) in analytics.accessLogs" :key="idx">
+              <td class="p-2">{{ new Date(log.date).toLocaleString() }}</td>
+              <td class="p-2">{{ log.referer || '-' }}</td>
+              <td class="p-2">{{ log.userAgent || '-' }}</td>
+              <td class="p-2">{{ log.ip || '-' }}</td>
             </tr>
           </tbody>
         </table>
+      </div>
+      <div v-if="analytics.referers && analytics.referers.length > 0" class="bg-white shadow rounded-lg p-6 mt-6">
+        <h3 class="text-xl font-bold mb-4">Referrers</h3>
+        <ul class="list-disc pl-5">
+          <li v-for="(referer, idx) in analytics.referers" :key="idx" class="mb-1">
+            {{ referer }}
+          </li>
+        </ul>
       </div>
     </div>
   </div>

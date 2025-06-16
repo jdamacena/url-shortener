@@ -116,12 +116,19 @@ app.get(/^\/([A-Za-z0-9_-]+)$/, async (req, res) => {
     }
 
     // Update analytics
-    url.clicks = (url.clicks || 0) + 1;
+    url.clickCount = (url.clickCount || 0) + 1;
     url.lastAccessedAt = new Date();
-    url.clickHistory = url.clickHistory || [];
-    url.clickHistory.push({
-      timestamp: new Date(),
-      referrer: req.get("referer") || null,
+
+    // Add referrer to the referers array if it's not already there
+    const referrer = req.get("referer") || null;
+    if (referrer && !url.referers.includes(referrer)) {
+      url.referers.push(referrer);
+    }
+
+    // Add access log
+    url.accessLogs.push({
+      date: new Date(),
+      referer: referrer,
       userAgent: req.get("user-agent"),
       ip: req.ip,
     });

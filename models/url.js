@@ -1,34 +1,26 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const urlSchema = new mongoose.Schema({
-    originalUrl: { type: String, required: true },
-    shortUrl: { type: String, required: true, unique: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    clicks: { type: Number, default: 0 },
-    active: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    lastAccessedAt: { type: Date },
-    clickHistory: [{
-        timestamp: { type: Date, default: Date.now },
-        referrer: String,
-        ip: String,
-        userAgent: String
-    }],
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to the User model
-    clickCount: { type: Number, default: 0 }, // Track the number of clicks
-    createdAt: { type: Date, default: Date.now }, // Timestamp when the URL was created
-    expiresAt: { type: Date }, // Expiration date for the short URL
-    lastAccessedAt: { type: Date }, // Timestamp for the last access
-    referers: [{ type: String }], // List of referer URLs
-    accessLogs: [{ // Log of accesses to the short URL
-        date: { type: Date, default: Date.now }, // Timestamp of the access
-        referer: String, // Referer URL
-        ip: String, // IP address of the requester
-        userAgent: String // User agent string of the requester
-    }],
-    active: { type: Boolean, default: true } // Indicates if the URL is active
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Reference to the User model
+  originalUrl: { type: String, required: true },
+  shortUrl: { type: String, required: true, unique: true },
+  clickCount: { type: Number, default: 0 }, // Track the number of clicks
+  createdAt: { type: Date, default: Date.now }, // Timestamp when the URL was created
+  expiresAt: { type: Date }, // Expiration date for the short URL
+  lastAccessedAt: { type: Date }, // Timestamp for the last access
+  referers: [{ type: String }], // List of referer URLs
+  accessLogs: [
+    {
+      // Log of accesses to the short URL
+      date: { type: Date, default: Date.now }, // Timestamp of the access
+      referer: String, // Referer URL
+      ip: String, // IP address of the requester
+      userAgent: String, // User agent string of the requester
+    },
+  ],
+  active: { type: Boolean, default: true }, // Indicates if the URL is active
 });
 
-const Url = mongoose.model('Url', urlSchema);
+const Url = mongoose.model("Url", urlSchema);
 
 export default Url;
