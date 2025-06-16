@@ -4,7 +4,7 @@ import Url from "../models/url.js";
 const router = express.Router();
 
 // Get Analytics for a Short URL
-router.get("/analytics/:shortUrl", async (req, res) => {
+router.get("/:shortUrl", async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authenticated" });
   }
