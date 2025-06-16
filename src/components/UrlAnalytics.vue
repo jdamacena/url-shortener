@@ -6,7 +6,7 @@
     <div v-else-if="!analytics" class="text-center text-gray-500">No analytics found.</div>
     <div v-else>
       <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <div class="mb-2"><span class="font-bold">Short URL:</span> <a :href="'/' + analytics.shortUrl" target="_blank" class="text-blue-700 underline">/{{ analytics.shortUrl }}</a></div>
+        <div class="mb-2"><span class="font-bold">Short URL:</span> <a :href="`${BACKEND_BASE_URL}/${analytics.shortUrl}`" target="_blank" class="text-blue-700 underline">{{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ analytics.shortUrl }}</a></div>
         <div class="mb-2 flex items-center gap-2">
           <span class="font-bold">Original URL:</span>
           <span v-if="!editingOriginalUrl" class="break-all" id="original-url-link-group">
@@ -83,6 +83,7 @@ export default {
     const authStore = useAuthStore()
 
     const canEdit = computed(() => authStore.user)
+    const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:3000'
 
     onMounted(async () => {
       await fetchAnalytics()
@@ -118,7 +119,7 @@ export default {
     async function toggleActive() {
       try {
         await urlStore.toggleActive(analytics.value)
-        await fetchAnalytics()
+        analytics.value.active = !analytics.value.active // Optimistic update
       } catch (e) {
         error.value = e?.message || 'Failed to toggle active status'
       }
@@ -131,7 +132,7 @@ export default {
       }
     })
 
-    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive }
+    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive, BACKEND_BASE_URL }
   }
 }
 </script>

@@ -112,7 +112,6 @@ export const useUrlStore = defineStore("url", {
     },
 
     async toggleActive(url) {
-      this.loading = true;
       this.error = null;
       try {
         const response = await fetch(
@@ -131,8 +130,6 @@ export const useUrlStore = defineStore("url", {
       } catch (error) {
         this.error = error.message;
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
   },
