@@ -45,6 +45,7 @@ export const useAuthStore = defineStore("auth", {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include", // Ensure cookies/session are sent
           body: JSON.stringify({ username, password }),
         });
         if (!response.ok) {
@@ -60,7 +61,10 @@ export const useAuthStore = defineStore("auth", {
     },
     async logout() {
       try {
-        await fetch(`${API_BASE_URL}/api/auth/logout`, { method: "POST" });
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
         this.user = null;
       } catch (error) {
         console.error("Failed to logout:", error);

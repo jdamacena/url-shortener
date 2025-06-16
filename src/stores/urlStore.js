@@ -20,6 +20,7 @@ export const useUrlStore = defineStore("url", {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include", // Include cookies for authentication
           body: JSON.stringify({ url: longUrl, expiresAt }),
         });
         const data = await response.json();
@@ -63,7 +64,10 @@ export const useUrlStore = defineStore("url", {
       this.error = null;
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/analytics/${shortId}`
+          `${API_BASE_URL}/api/analytics/${shortId}`,
+          {
+            credentials: "include", // Ensure cookies/session are sent
+          }
         );
         if (!response.ok) {
           throw new Error("Failed to fetch URL analytics");
@@ -90,6 +94,7 @@ export const useUrlStore = defineStore("url", {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: "include", // Ensure cookies/session are sent
             body: JSON.stringify({ originalUrl }),
           }
         );
