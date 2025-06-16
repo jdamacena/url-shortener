@@ -1,0 +1,21 @@
+{
+  "name": "url-shortener-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@vueuse/core": "^13.3.0",
+    "axios": "^1.10.0",
+    "pinia": "^2.3.1",
+    "vue": "^3.2.0",
+    "vue-router": "^4.5.1"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.4",
+    "vite": "^6.3.5"
+  }
+}
