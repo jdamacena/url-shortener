@@ -141,8 +141,8 @@ app.get(/^\/([A-Za-z0-9_-]+)$/, async (req, res) => {
   }
 });
 
-// Serve Vue.js app for all remaining routes
-app.get("/*splat", (req, res) => {
+// Serve Vue.js app for all remaining non-API routes
+app.get(/^\/(?!api\/).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
