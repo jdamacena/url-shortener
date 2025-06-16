@@ -93,4 +93,26 @@ router.post("/:shortId/edit-original", async (req, res) => {
   }
 });
 
+// Toggle active status for a short URL
+router.post("/:shortId/toggle-active", async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  try {
+    const url = await Url.findOne({
+      shortUrl: req.params.shortId,
+      userId: req.user.id,
+    });
+    if (!url) {
+      return res.status(404).json({ error: "URL not found" });
+    }
+    url.active = !url.active;
+    await url.save();
+    res.json({ active: url.active });
+  } catch (error) {
+    console.error("Error toggling active status:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

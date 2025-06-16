@@ -110,5 +110,30 @@ export const useUrlStore = defineStore("url", {
         this.loading = false;
       }
     },
+
+    async toggleActive(url) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/url/${url.shortUrl}/toggle-active`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to toggle active status");
+        }
+        const data = await response.json();
+        url.active = data.active;
+        return data;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 });

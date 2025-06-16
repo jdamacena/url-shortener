@@ -20,7 +20,13 @@
           </form>
         </div>
         <div class="mb-2"><span class="font-bold">Clicks:</span> {{ analytics.clickCount }}</div>
-        <div class="mb-2"><span class="font-bold">Active:</span> <span :class="analytics.active ? 'text-green-600' : 'text-red-600'">{{ analytics.active ? 'Yes' : 'No' }}</span></div>
+        <div class="mb-2 flex items-center gap-2">
+          <span class="font-bold">Active:</span>
+          <span :class="analytics.active ? 'text-green-600' : 'text-red-600'">{{ analytics.active ? 'Yes' : 'No' }}</span>
+          <button v-if="canEdit" @click="toggleActive" class="ml-2 px-2 py-1 text-xs rounded" :class="analytics.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'">
+            {{ analytics.active ? 'Deactivate' : 'Activate' }}
+          </button>
+        </div>
         <div class="mb-2" v-if="analytics.expiresAt"><span class="font-bold">Expires At:</span> {{ new Date(analytics.expiresAt).toLocaleString() }}</div>
         <div class="mb-2" v-if="analytics.lastAccessedAt"><span class="font-bold">Last Accessed:</span> {{ new Date(analytics.lastAccessedAt).toLocaleString() }}</div>
       </div>
@@ -109,6 +115,15 @@ export default {
       }
     }
 
+    async function toggleActive() {
+      try {
+        await urlStore.toggleActive(analytics.value)
+        await fetchAnalytics()
+      } catch (e) {
+        error.value = e?.message || 'Failed to toggle active status'
+      }
+    }
+
     // Set initial value for edit field when analytics loads
     watchEffect(() => {
       if (analytics.value) {
@@ -116,7 +131,7 @@ export default {
       }
     })
 
-    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl }
+    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive }
   }
 }
 </script>

@@ -18,13 +18,23 @@
         <tbody>
           <tr v-for="url in urlStore.urls" :key="url._id" :class="{'bg-gray-50': !url.active}">
             <td class="p-3">
-              <a :href="`${BACKEND_BASE_URL}/${url.shortUrl}`" target="_blank" class="text-blue-700 underline">{{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ url.shortUrl }}</a>
+              <a :href="`${BACKEND_BASE_URL}/${url.shortUrl}`" target="_blank" class="text-blue-700 underline">/{{ url.shortUrl }}</a>
             </td>
             <td class="p-3 truncate max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
             <td class="p-3 text-center">{{ url.clickCount }}</td>
             <td class="p-3 text-center">
-              <button @click="toggleActive(url)" :class="url.active ? 'text-green-600' : 'text-red-600'">
-                {{ url.active ? 'Active' : 'Inactive' }}
+              <button
+                @click="toggleActive(url)"
+                class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none"
+                :class="url.active ? 'bg-green-400' : 'bg-gray-300'"
+                :aria-pressed="url.active"
+                :title="url.active ? 'Deactivate' : 'Activate'"
+              >
+                <span
+                  class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                  :class="url.active ? 'translate-x-6' : 'translate-x-1'"
+                ></span>
+                <span class="sr-only">Toggle Active</span>
               </button>
             </td>
             <td class="p-3 text-center">
