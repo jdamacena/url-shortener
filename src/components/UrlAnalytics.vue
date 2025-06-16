@@ -78,6 +78,9 @@
           </li>
         </ul>
       </div>
+      <div class="bg-white shadow rounded-lg p-6 mt-6">
+        <AnalyticsCharts v-if="analytics" :analytics="analytics" />
+      </div>
     </div>
   </div>
 </template>
@@ -87,9 +90,11 @@ import { useUrlStore } from '../stores/urlStore'
 import { ref, onMounted, computed, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import AnalyticsCharts from './AnalyticsCharts.vue'
 
 export default {
   name: 'UrlAnalytics',
+  components: { AnalyticsCharts },
   setup() {
     const route = useRoute()
     const urlStore = useUrlStore()
@@ -162,4 +167,8 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* Add any component-specific styles here */
+</style>
 
