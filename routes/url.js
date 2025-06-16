@@ -23,10 +23,15 @@ router.post("/shorten", async (req, res) => {
       return res.status(400).json({ error: "Please enter a valid URL" });
     }
     const shortId = shortid.generate();
+    const userId = req.user ? req.user.id : null;
+    if (!userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
     const newUrl = new Url({
       originalUrl: urlToShorten,
       shortUrl: shortId,
-      userId: req.isAuthenticated() ? req.user.id : null,
+      userId: userId,
       clickCount: 0,
       active: true,
       createdAt: new Date(),
