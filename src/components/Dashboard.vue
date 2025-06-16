@@ -17,8 +17,23 @@
         </thead>
         <tbody>
           <tr v-for="url in urlStore.urls" :key="url._id" :class="{'bg-gray-50': !url.active}">
-            <td class="p-3">
-              <a :href="`${BACKEND_BASE_URL}/${url.shortUrl}`" target="_blank" class="text-blue-700 underline">/{{ url.shortUrl }}</a>
+            <td class="p-3 flex items-center gap-2">
+              <a :href="`${BACKEND_BASE_URL}/${url.shortUrl}`" target="_blank" class="text-blue-700 underline whitespace-nowrap">
+                {{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ url.shortUrl }}
+              </a>
+              <button
+                @click="copyLink(url)"
+                :class="[
+                  'ml-2 px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
+                  copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
+                ]"
+                :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'"
+              >
+                <svg v-if="copiedUrl === url.shortUrl" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 4H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2V4h6V2" /></svg>
+                <span v-if="copiedUrl === url.shortUrl">Copied!</span>
+                <span v-else>Copy</span>
+              </button>
             </td>
             <td class="p-3 truncate max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
             <td class="p-3 text-center">{{ url.clickCount }}</td>
@@ -39,14 +54,6 @@
             </td>
             <td class="p-3 text-center">
               <router-link :to="`/analytics/${url.shortUrl}`" class="text-blue-500 underline">View</router-link>
-            </td>
-            <td class="p-3 text-center">
-              <button
-                @click="copyLink(url)"
-                :class="copiedUrl === url.shortUrl ? 'text-blue-600' : ''"
-                :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'"
-                class="copy-link-btn underline"
-              >Copy</button>
             </td>
           </tr>
         </tbody>

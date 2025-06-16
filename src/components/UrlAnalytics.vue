@@ -6,7 +6,25 @@
     <div v-else-if="!analytics" class="text-center text-gray-500">No analytics found.</div>
     <div v-else>
       <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <div class="mb-2"><span class="font-bold">Short URL:</span> <a :href="`${BACKEND_BASE_URL}/${analytics.shortUrl}`" target="_blank" class="text-blue-700 underline">{{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ analytics.shortUrl }}</a></div>
+        <div class="mb-2 flex items-center gap-2">
+          <span class="font-bold">Short URL:</span>
+          <a :href="`${BACKEND_BASE_URL}/${analytics.shortUrl}`" target="_blank" class="text-blue-700 underline whitespace-nowrap">
+            {{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ analytics.shortUrl }}
+          </a>
+          <button
+            @click="copyShortUrl"
+            :class="[
+              'ml-2 px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
+              copied ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
+            ]"
+            :title="copied ? 'Copied!' : 'Copy link'"
+          >
+            <svg v-if="copied" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 4H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2V4h6V2" /></svg>
+            <span v-if="copied">Copied!</span>
+            <span v-else>Copy</span>
+          </button>
+        </div>
         <div class="mb-2 flex items-center gap-2">
           <span class="font-bold">Original URL:</span>
           <span v-if="!editingOriginalUrl" class="break-all" id="original-url-link-group">
@@ -125,6 +143,14 @@ export default {
       }
     }
 
+    const copied = ref(false)
+    function copyShortUrl() {
+      const link = `${BACKEND_BASE_URL}/${analytics.value.shortUrl}`
+      navigator.clipboard.writeText(link)
+      copied.value = true
+      setTimeout(() => { copied.value = false }, 1200)
+    }
+
     // Set initial value for edit field when analytics loads
     watchEffect(() => {
       if (analytics.value) {
@@ -132,7 +158,7 @@ export default {
       }
     })
 
-    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive, BACKEND_BASE_URL }
+    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive, BACKEND_BASE_URL, copied, copyShortUrl }
   }
 }
 </script>
