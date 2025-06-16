@@ -45,7 +45,20 @@
             {{ analytics.active ? 'Deactivate' : 'Activate' }}
           </button>
         </div>
-        <div class="mb-2" v-if="analytics.expiresAt"><span class="font-bold">Expires At:</span> {{ new Date(analytics.expiresAt).toLocaleString() }}</div>
+        <div class="mb-2 flex items-center gap-2" v-if="canEdit">
+          <span class="font-bold">Expiration:</span>
+          <span v-if="!editingExpiration">
+            <span v-if="analytics.expiresAt">{{ new Date(analytics.expiresAt).toLocaleString() }}</span>
+            <span v-else class="text-green-700">Never Expires</span>
+            <button @click="startEditExpiration" class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
+          </span>
+          <form v-else @submit.prevent="submitEditExpiration" class="flex items-center gap-2">
+            <input v-model="editExpiration" type="datetime-local" class="border rounded p-1" :min="minDateTime" />
+            <button type="submit" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Save</button>
+            <button type="button" @click="setNeverExpires" class="bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">Never Expires</button>
+            <button type="button" @click="cancelEditExpiration" class="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300">Cancel</button>
+          </form>
+        </div>
         <div class="mb-2" v-if="analytics.lastAccessedAt"><span class="font-bold">Last Accessed:</span> {{ new Date(analytics.lastAccessedAt).toLocaleString() }}</div>
       </div>
       <div class="bg-white shadow rounded-lg p-6">
@@ -141,8 +154,8 @@ export default {
 
     async function toggleActive() {
       try {
-        await urlStore.toggleActive(analytics.value)
-        analytics.value.active = !analytics.value.active // Optimistic update
+        const updated = await urlStore.toggleActive(analytics.value)
+        analytics.value.active = updated.active // update the UI immediately
       } catch (e) {
         error.value = e?.message || 'Failed to toggle active status'
       }
@@ -156,14 +169,46 @@ export default {
       setTimeout(() => { copied.value = false }, 1200)
     }
 
+    const editingExpiration = ref(false)
+    const editExpiration = ref("")
+    const minDateTime = new Date().toISOString().slice(0, 16)
+
+    function startEditExpiration() {
+      editingExpiration.value = true
+      editExpiration.value = analytics.value.expiresAt ? new Date(analytics.value.expiresAt).toISOString().slice(0, 16) : ""
+    }
+    function cancelEditExpiration() {
+      editingExpiration.value = false
+      editExpiration.value = analytics.value.expiresAt ? new Date(analytics.value.expiresAt).toISOString().slice(0, 16) : ""
+    }
+    async function submitEditExpiration() {
+      try {
+        await urlStore.editExpiration(analytics.value.shortUrl, editExpiration.value ? new Date(editExpiration.value).toISOString() : undefined)
+        editingExpiration.value = false
+        await fetchAnalytics()
+      } catch (e) {
+        error.value = e?.message || 'Failed to update expiration'
+      }
+    }
+    async function setNeverExpires() {
+      try {
+        await urlStore.editExpiration(analytics.value.shortUrl, undefined)
+        editingExpiration.value = false
+        await fetchAnalytics()
+      } catch (e) {
+        error.value = e?.message || 'Failed to update expiration'
+      }
+    }
+
     // Set initial value for edit field when analytics loads
     watchEffect(() => {
       if (analytics.value) {
         editOriginalUrl.value = analytics.value.originalUrl
+        editExpiration.value = analytics.value.expiresAt ? new Date(analytics.value.expiresAt).toISOString().slice(0, 16) : ""
       }
     })
 
-    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive, BACKEND_BASE_URL, copied, copyShortUrl }
+    return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive, BACKEND_BASE_URL, copied, copyShortUrl, editingExpiration, editExpiration, minDateTime, startEditExpiration, cancelEditExpiration, submitEditExpiration, setNeverExpires }
   }
 }
 </script>

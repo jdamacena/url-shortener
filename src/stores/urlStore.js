@@ -84,20 +84,14 @@ export const useUrlStore = defineStore("url", {
     },
 
     async editOriginalUrl(shortId, originalUrl) {
-      this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/url/${shortId}/edit-original`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include", // Ensure cookies/session are sent
-            body: JSON.stringify({ originalUrl }),
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/api/url/${shortId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ originalUrl }),
+        });
         if (!response.ok) {
           throw new Error("Failed to update URL");
         }
@@ -106,8 +100,6 @@ export const useUrlStore = defineStore("url", {
       } catch (error) {
         this.error = error.message;
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
 
@@ -115,10 +107,12 @@ export const useUrlStore = defineStore("url", {
       this.error = null;
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/url/${url.shortUrl}/toggle-active`,
+          `${API_BASE_URL}/api/url/${url.shortUrl}`,
           {
-            method: "POST",
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
             credentials: "include",
+            body: JSON.stringify({ active: !url.active }),
           }
         );
         if (!response.ok) {
@@ -126,6 +120,26 @@ export const useUrlStore = defineStore("url", {
         }
         const data = await response.json();
         url.active = data.active;
+        return data;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      }
+    },
+
+    async editExpiration(shortId, expiresAt) {
+      this.error = null;
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/url/${shortId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ expiresAt }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to update expiration");
+        }
+        const data = await response.json();
         return data;
       } catch (error) {
         this.error = error.message;

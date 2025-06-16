@@ -67,14 +67,10 @@ router.get("/urls", async (req, res) => {
   }
 });
 
-// Edit original URL for a short URL
-router.post("/:shortId/edit-original", async (req, res) => {
+// Update properties of a short URL (RESTful PATCH)
+router.patch("/:shortId", async (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Not authenticated" });
-  }
-  const { originalUrl } = req.body;
-  if (!originalUrl) {
-    return res.status(400).json({ error: "Original URL is required" });
   }
   try {
     const url = await Url.findOne({
@@ -84,33 +80,18 @@ router.post("/:shortId/edit-original", async (req, res) => {
     if (!url) {
       return res.status(404).json({ error: "URL not found" });
     }
-    url.originalUrl = originalUrl;
+    // Only update allowed fields
+    if (req.body.originalUrl !== undefined)
+      url.originalUrl = req.body.originalUrl;
+    if (req.body.expiresAt !== undefined)
+      url.expiresAt = req.body.expiresAt
+        ? new Date(req.body.expiresAt)
+        : undefined;
+    if (req.body.active !== undefined) url.active = req.body.active;
     await url.save();
     res.json(url);
   } catch (error) {
-    console.error("Error updating original URL:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Toggle active status for a short URL
-router.post("/:shortId/toggle-active", async (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-  try {
-    const url = await Url.findOne({
-      shortUrl: req.params.shortId,
-      userId: req.user.id,
-    });
-    if (!url) {
-      return res.status(404).json({ error: "URL not found" });
-    }
-    url.active = !url.active;
-    await url.save();
-    res.json({ active: url.active });
-  } catch (error) {
-    console.error("Error toggling active status:", error);
+    console.error("Error updating URL:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
