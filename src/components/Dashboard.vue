@@ -21,7 +21,7 @@
               <a :href="`${BACKEND_BASE_URL}/${url.shortUrl}`" target="_blank" class="text-blue-700 underline">{{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ url.shortUrl }}</a>
             </td>
             <td class="p-3 truncate max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
-            <td class="p-3 text-center">{{ url.clicks }}</td>
+            <td class="p-3 text-center">{{ url.clickCount }}</td>
             <td class="p-3 text-center">
               <button @click="toggleActive(url)" :class="url.active ? 'text-green-600' : 'text-red-600'">
                 {{ url.active ? 'Active' : 'Inactive' }}
