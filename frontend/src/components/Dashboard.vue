@@ -12,14 +12,13 @@
             <th class="p-3 text-center">Clicks</th>
             <th class="p-3 text-center">Active</th>
             <th class="p-3 text-center">Analytics</th>
-            <th class="p-3 text-center">Copy</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="url in urlStore.urls" :key="url._id" :class="{'bg-gray-50': !url.active}">
             <td class="p-3 flex items-center gap-2">
               <a :href="`${BACKEND_BASE_URL}/${url.shortUrl}`" target="_blank" class="text-blue-700 underline whitespace-nowrap">
-                {{ BACKEND_BASE_URL.replace('http://', '').replace('https://', '') }}/{{ url.shortUrl }}
+                /{{ url.shortUrl }}
               </a>
               <button
                 @click="copyLink(url)"
