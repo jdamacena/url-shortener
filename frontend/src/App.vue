@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <AppHeader />
-    <main>
+    <main class="container mx-auto p-4">
       <router-view></router-view>
     </main>
     <AppFooter />
@@ -40,9 +40,5 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-}
-
-main {
-  margin-top: 20px;
 }
 </style>
