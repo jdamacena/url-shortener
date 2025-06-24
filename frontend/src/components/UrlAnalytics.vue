@@ -61,6 +61,9 @@
         </div>
         <div class="mb-2" v-if="analytics.lastAccessedAt"><span class="font-bold">Last Accessed:</span> {{ new Date(analytics.lastAccessedAt).toLocaleString() }}</div>
       </div>
+      <div class="bg-white shadow rounded-lg p-6 mt-6">
+        <AnalyticsCharts v-if="analytics" :analytics="analytics" />
+      </div>
       <div class="bg-white shadow rounded-lg p-6">
         <h3 class="text-xl font-bold mb-4">Access History</h3>
         <div v-if="!analytics.accessLogs || analytics.accessLogs.length === 0" class="text-gray-500">No access logs yet.</div>
@@ -90,9 +93,6 @@
             {{ referer }}
           </li>
         </ul>
-      </div>
-      <div class="bg-white shadow rounded-lg p-6 mt-6">
-        <AnalyticsCharts v-if="analytics" :analytics="analytics" />
       </div>
     </div>
   </div>
@@ -212,8 +212,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-/* Add any component-specific styles here */
-</style>
-

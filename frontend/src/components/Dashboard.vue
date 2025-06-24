@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-3xl mx-auto mt-10">
+    <ShortenForm class="py-8" />
     <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">Your Shortened URLs</h2>
     <div v-if="urlStore.loading" class="text-center text-gray-500">Loading...</div>
     <div v-else-if="urlStore.urls.length === 0" class="text-center text-gray-500">No URLs found. Start by shortening a URL!</div>
@@ -64,6 +65,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import ShortenForm from './ShortenForm.vue'
 import { useUrlStore } from '../stores/urlStore'
 import { useAuthStore } from '../stores/authStore'
 
@@ -71,6 +73,7 @@ const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, ''
 
 export default {
   name: 'Dashboard',
+  components: { ShortenForm },
   setup() {
     const urlStore = useUrlStore()
     const authStore = useAuthStore()
