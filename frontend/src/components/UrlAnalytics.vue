@@ -192,7 +192,7 @@ export default {
     }
     async function setNeverExpires() {
       try {
-        await urlStore.editExpiration(analytics.value.shortUrl, undefined)
+        await urlStore.editExpiration(analytics.value.shortUrl, null)
         editingExpiration.value = false
         await fetchAnalytics()
       } catch (e) {
