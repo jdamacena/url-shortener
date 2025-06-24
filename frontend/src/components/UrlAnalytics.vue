@@ -64,7 +64,7 @@
       <div class="bg-white shadow rounded-lg p-6 mt-6">
         <AnalyticsCharts v-if="analytics" :analytics="analytics" />
       </div>
-      <div class="bg-white shadow rounded-lg p-6">
+      <div class="bg-white shadow rounded-lg p-6 mt-6">
         <h3 class="text-xl font-bold mb-4">Access History</h3>
         <div v-if="!analytics.accessLogs || analytics.accessLogs.length === 0" class="text-gray-500">No access logs yet.</div>
         <table v-else class="w-full">
