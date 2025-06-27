@@ -12,7 +12,7 @@ import Dashboard from "./components/Dashboard.vue";
 import "./assets/styles/main.css";
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: "/", component: UrlShortener },
     { path: "/dashboard", component: Dashboard },
