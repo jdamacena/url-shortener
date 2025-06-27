@@ -2,6 +2,8 @@
 
 A modern, full-featured URL shortener web application built with Node.js, Express, MongoDB, and Vue 3 (SPA). Easily create, manage, and analyze short links with user authentication and professional analytics dashboards.
 
+See demo [here](https://jdamacena.github.io/url-shortener/).
+
 ## Tech Stack
 
 - **Backend:** Node.js, Express.js, MongoDB (Mongoose), Passport.js, express-session, bcryptjs
