@@ -24,7 +24,7 @@ jobs:
         working-directory: frontend
 
       - name: Build frontend
-        run: npm run build
+        run: VITE_BASE=/url-shortener/ npm run build
         working-directory: frontend
 
       - name: Copy index.html to 404.html (SPA fallback)
