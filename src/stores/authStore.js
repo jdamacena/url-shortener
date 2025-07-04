@@ -8,6 +8,7 @@ export const useAuthStore = defineStore("auth", {
     user: null,
     loading: false,
     error: null,
+    token: localStorage.getItem("token") || null,
   }),
   getters: {
     isAuthenticated: (state) => !!state.user,
@@ -22,7 +23,6 @@ export const useAuthStore = defineStore("auth", {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Include cookies for authentication
           body: JSON.stringify({ username, password }),
         });
         if (!response.ok) {
@@ -30,6 +30,8 @@ export const useAuthStore = defineStore("auth", {
         }
         const data = await response.json();
         this.user = data.user;
+        this.token = data.token;
+        localStorage.setItem("token", data.token);
       } catch (error) {
         this.error = error.message;
       } finally {
@@ -45,7 +47,6 @@ export const useAuthStore = defineStore("auth", {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Ensure cookies/session are sent
           body: JSON.stringify({ username, password }),
         });
         if (!response.ok) {
@@ -53,6 +54,8 @@ export const useAuthStore = defineStore("auth", {
         }
         const data = await response.json();
         this.user = data.user;
+        this.token = data.token;
+        localStorage.setItem("token", data.token);
       } catch (error) {
         this.error = error.message;
       } finally {
@@ -60,22 +63,17 @@ export const useAuthStore = defineStore("auth", {
       }
     },
     async logout() {
-      try {
-        await fetch(`${API_BASE_URL}/api/auth/logout`, {
-          method: "POST",
-          credentials: "include",
-        });
-        this.user = null;
-      } catch (error) {
-        console.error("Failed to logout:", error);
-      }
+      this.user = null;
+      this.token = null;
+      localStorage.removeItem("token");
     },
     async fetchUser() {
       this.loading = true;
       this.error = null;
       try {
+        const token = this.token || localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}/api/auth/user`, {
-          credentials: "include", // Include cookies for authentication
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!response.ok) {
           throw new Error("Failed to fetch user");
@@ -83,7 +81,7 @@ export const useAuthStore = defineStore("auth", {
         const data = await response.json();
         this.user = data.user;
       } catch (error) {
-        this.user = null; // Clear user if not authenticated
+        this.user = null;
         this.error = error.message;
       } finally {
         this.loading = false;

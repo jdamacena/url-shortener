@@ -15,12 +15,13 @@ export const useUrlStore = defineStore("url", {
       this.loading = true;
       this.error = null;
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}/api/url/shorten`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          credentials: "include", // Include cookies for authentication
           body: JSON.stringify({ url: longUrl, expiresAt }),
         });
         const data = await response.json();
@@ -43,8 +44,9 @@ export const useUrlStore = defineStore("url", {
       this.loading = true;
       this.error = null;
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}/api/url/urls`, {
-          credentials: "include", // Include cookies for authentication
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!response.ok) {
           throw new Error("Failed to fetch URLs");
@@ -63,10 +65,11 @@ export const useUrlStore = defineStore("url", {
       this.loading = true;
       this.error = null;
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(
           `${API_BASE_URL}/api/analytics/${shortId}`,
           {
-            credentials: "include", // Ensure cookies/session are sent
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
         );
         if (!response.ok) {
@@ -86,10 +89,13 @@ export const useUrlStore = defineStore("url", {
     async editOriginalUrl(shortId, originalUrl) {
       this.error = null;
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}/api/url/${shortId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({ originalUrl }),
         });
         if (!response.ok) {
@@ -106,12 +112,15 @@ export const useUrlStore = defineStore("url", {
     async toggleActive(url) {
       this.error = null;
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(
           `${API_BASE_URL}/api/url/${url.shortUrl}`,
           {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
             body: JSON.stringify({ active: !url.active }),
           }
         );
@@ -130,10 +139,13 @@ export const useUrlStore = defineStore("url", {
     async editExpiration(shortId, expiresAt) {
       this.error = null;
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}/api/url/${shortId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({ expiresAt }),
         });
         if (!response.ok) {
