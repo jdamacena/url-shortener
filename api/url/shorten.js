@@ -3,6 +3,7 @@ import Url from "../../lib/url.js";
 import shortid from "shortid";
 import validator from "validator";
 import authMiddleware from "../../lib/authMiddleware.js";
+import corsMiddleware from "../../lib/corsMiddleware.js";
 
 async function handler(req, res) {
   if (req.method !== "POST") {
@@ -54,4 +55,4 @@ async function handler(req, res) {
   }
 }
 
-export default authMiddleware(handler);
+export default corsMiddleware(authMiddleware(handler));

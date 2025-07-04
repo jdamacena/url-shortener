@@ -2,10 +2,11 @@ import dbConnect from "../../lib/dbConnect.js";
 import User from "../../lib/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import corsMiddleware from "../../lib/corsMiddleware.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -38,3 +39,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export default corsMiddleware(handler);

@@ -1,6 +1,7 @@
 import dbConnect from "../../lib/dbConnect.js";
 import Url from "../../lib/url.js";
 import authMiddleware from "../../lib/authMiddleware.js";
+import corsMiddleware from "../../lib/corsMiddleware.js";
 
 async function handler(req, res) {
   if (req.method !== "GET") {
@@ -24,4 +25,4 @@ async function handler(req, res) {
   }
 }
 
-export default authMiddleware(handler);
+export default corsMiddleware(authMiddleware(handler));

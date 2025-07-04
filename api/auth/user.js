@@ -1,4 +1,5 @@
 import authMiddleware from "../../lib/authMiddleware.js";
+import corsMiddleware from "../../lib/corsMiddleware.js";
 
 async function handler(req, res) {
   if (req.method !== "GET") {
@@ -9,4 +10,4 @@ async function handler(req, res) {
   res.status(401).json({ error: "Not authenticated" });
 }
 
-export default authMiddleware(handler);
+export default corsMiddleware(authMiddleware(handler));
