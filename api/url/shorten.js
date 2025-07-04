@@ -47,7 +47,7 @@ async function handler(req, res) {
       shortId,
       shortUrl: `${req.headers["x-forwarded-proto"] || "https"}://${
         req.headers.host
-      }/${shortId}`,
+      }/r/${shortId}`,
     });
   } catch (error) {
     console.error("Error creating short URL:", error);

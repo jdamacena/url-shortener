@@ -4,7 +4,6 @@ import authMiddleware from "../../lib/authMiddleware.js";
 import corsMiddleware from "../../lib/corsMiddleware.js";
 
 async function handler(req, res) {
-  // TODO: Replace with real user authentication
   const userId = req.user ? req.user.userId : null;
   if (!userId) {
     return res.status(401).json({ error: "Not authenticated" });

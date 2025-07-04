@@ -30,6 +30,9 @@ export const useUrlStore = defineStore("url", {
         }
 
         // Use the short URL from the API response
+        if (data.shortId) {
+          data.shortUrl = `${API_BASE_URL}/r/${data.shortId}`;
+        }
         this.currentUrl = data;
         this.urls.unshift(data);
       } catch (error) {
