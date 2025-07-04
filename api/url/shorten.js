@@ -2,8 +2,9 @@ import dbConnect from "../../lib/dbConnect.js";
 import Url from "../../lib/url.js";
 import shortid from "shortid";
 import validator from "validator";
+import authMiddleware from "../../lib/authMiddleware.js";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -24,8 +25,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Please enter a valid URL" });
     }
     await dbConnect();
-    // TODO: Replace with real user authentication
-    const userId = req.user ? req.user.id : null;
+    const userId = req.user ? req.user.userId : null;
     if (!userId) {
       return res.status(401).json({ error: "User not authenticated" });
     }
@@ -49,7 +49,9 @@ export default async function handler(req, res) {
       }/${shortId}`,
     });
   } catch (error) {
-    console.error("Error shortening URL:", error);
+    console.error("Error creating short URL:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export default authMiddleware(handler);

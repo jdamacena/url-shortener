@@ -1,13 +1,13 @@
 import dbConnect from "../../lib/dbConnect.js";
 import Url from "../../lib/url.js";
+import authMiddleware from "../../lib/authMiddleware.js";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
-  // TODO: Replace with real user authentication
-  const userId = req.user ? req.user.id : null;
+  const userId = req.user ? req.user.userId : null;
   if (!userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }
@@ -23,3 +23,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export default authMiddleware(handler);

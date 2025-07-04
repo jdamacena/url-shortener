@@ -1,6 +1,9 @@
 import dbConnect from "../../lib/dbConnect.js";
 import User from "../../lib/user.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -22,8 +25,13 @@ export default async function handler(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ username, password: hashedPassword });
     await user.save();
-    // TODO: Implement JWT or stateless auth
-    res.json({ user: { username: user.username } });
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.json({ token, user: { username: user.username } });
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ error: "Internal server error" });
