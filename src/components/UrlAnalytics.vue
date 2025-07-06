@@ -162,11 +162,14 @@ export default {
 
     async function submitEditOriginalUrl() {
       try {
-        await urlStore.editOriginalUrl(analytics.value.shortUrl, editOriginalUrl.value)
+        savingOriginalUrl.value = true
+        const updated = await urlStore.editOriginalUrl(analytics.value.shortUrl, editOriginalUrl.value)
+        analytics.value.originalUrl = updated.originalUrl || editOriginalUrl.value
         editingOriginalUrl.value = false
-        await fetchAnalytics()
       } catch (e) {
         error.value = e?.message || 'Failed to update URL'
+      } finally {
+        savingOriginalUrl.value = false
       }
     }
 
@@ -201,20 +204,26 @@ export default {
     }
     async function submitEditExpiration() {
       try {
-        await urlStore.editExpiration(analytics.value.shortUrl, editExpiration.value ? new Date(editExpiration.value).toISOString() : undefined)
+        savingExpiration.value = true
+        const updated = await urlStore.editExpiration(analytics.value.shortUrl, editExpiration.value ? new Date(editExpiration.value).toISOString() : undefined)
+        analytics.value.expiresAt = updated.expiresAt || (editExpiration.value ? new Date(editExpiration.value).toISOString() : null)
         editingExpiration.value = false
-        await fetchAnalytics()
       } catch (e) {
         error.value = e?.message || 'Failed to update expiration'
+      } finally {
+        savingExpiration.value = false
       }
     }
     async function setNeverExpires() {
       try {
-        await urlStore.editExpiration(analytics.value.shortUrl, null)
+        savingExpiration.value = true
+        const updated = await urlStore.editExpiration(analytics.value.shortUrl, null)
+        analytics.value.expiresAt = updated.expiresAt || null
         editingExpiration.value = false
-        await fetchAnalytics()
       } catch (e) {
         error.value = e?.message || 'Failed to update expiration'
+      } finally {
+        savingExpiration.value = false
       }
     }
 
@@ -225,6 +234,9 @@ export default {
         editExpiration.value = analytics.value.expiresAt ? new Date(analytics.value.expiresAt).toISOString().slice(0, 16) : ""
       }
     })
+
+    const savingOriginalUrl = ref(false)
+    const savingExpiration = ref(false)
 
     return { analytics, loading, error, editingOriginalUrl, editOriginalUrl, canEdit, cancelEdit, submitEditOriginalUrl, toggleActive, BACKEND_BASE_URL, copied, copyShortUrl, editingExpiration, editExpiration, minDateTime, startEditExpiration, cancelEditExpiration, submitEditExpiration, setNeverExpires }
   }
