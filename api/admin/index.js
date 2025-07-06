@@ -4,12 +4,9 @@ import Url from "../../lib/url.js";
 import authMiddleware from "../../lib/authMiddleware.js";
 import corsMiddleware from "../../lib/corsMiddleware.js";
 
-// Only allow admin users (by username, for now)
-const ADMIN_USERNAMES = [process.env.ADMIN_USERNAME || "admin"];
-
 function adminOnly(handler) {
   return async (req, res) => {
-    if (!req.user || !ADMIN_USERNAMES.includes(req.user.username)) {
+    if (!req.user || req.user.role !== "system_admin") {
       return res.status(403).json({ error: "Forbidden: Admins only" });
     }
     return handler(req, res);

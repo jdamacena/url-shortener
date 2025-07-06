@@ -29,11 +29,11 @@ async function handler(req, res) {
     }
     // Generate JWT
     const token = jwt.sign(
-      { userId: user._id, username: user.username },
+      { userId: user._id, username: user.username, role: user.role },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
-    res.json({ token, user: { username: user.username } });
+    res.json({ token, user: { username: user.username, role: user.role } });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error" });

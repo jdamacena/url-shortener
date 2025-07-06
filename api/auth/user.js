@@ -10,7 +10,13 @@ async function handler(req, res) {
     return res.status(401).json({ error: "Not authenticated" });
   }
   // Return user info from JWT
-  res.json({ user: { userId: req.user.userId, username: req.user.username } });
+  res.json({
+    user: {
+      userId: req.user.userId,
+      username: req.user.username,
+      role: req.user.role,
+    },
+  });
 }
 
 export default corsMiddleware(authMiddleware(handler));

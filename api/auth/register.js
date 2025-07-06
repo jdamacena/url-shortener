@@ -23,16 +23,22 @@ async function handler(req, res) {
     if (existingUser) {
       return res.status(400).json({ error: "This username is already taken" });
     }
+    // If this is the first user, make them system_admin
+    const userCount = await User.countDocuments();
+    let role = "user";
+    if (userCount === 0) {
+      role = "system_admin";
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, password: hashedPassword });
+    const user = new User({ username, password: hashedPassword, role });
     await user.save();
     // Generate JWT
     const token = jwt.sign(
-      { userId: user._id, username: user.username },
+      { userId: user._id, username: user.username, role: user.role },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
-    res.json({ token, user: { username: user.username } });
+    res.json({ token, user: { username: user.username, role: user.role } });
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ error: "Internal server error" });

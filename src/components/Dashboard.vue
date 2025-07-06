@@ -1,6 +1,11 @@
 <template>
   <div class="max-w-3xl mx-auto mt-10">
     <Breadcrumbs />
+    <div v-if="authStore.user && authStore.user.role === 'system_admin'" class="mb-4 text-right">
+      <router-link to="/admin"
+        class="inline-block bg-blue-100 text-blue-700 px-4 py-2 rounded font-semibold hover:bg-blue-200 transition">Admin
+        Panel</router-link>
+    </div>
     <ShortenForm class="py-8" />
     <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">Your Shortened URLs</h2>
     <!-- Filter, Sort, and Search Controls -->
