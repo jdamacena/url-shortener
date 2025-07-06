@@ -6,8 +6,11 @@ async function handler(req, res) {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
-  // TODO: Implement JWT/stateless user lookup
-  res.status(401).json({ error: "Not authenticated" });
+  if (!req.user) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  // Return user info from JWT
+  res.json({ user: { userId: req.user.userId, username: req.user.username } });
 }
 
 export default corsMiddleware(authMiddleware(handler));

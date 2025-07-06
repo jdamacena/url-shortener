@@ -10,6 +10,7 @@ import NotFound from "./components/NotFound.vue";
 import LinkExpired from "./components/LinkExpired.vue";
 import Dashboard from "./components/Dashboard.vue";
 import "./assets/styles/main.css";
+import { useAuthStore } from "./stores/authStore";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,4 +30,11 @@ const app = createApp(App);
 
 app.use(pinia);
 app.use(router);
+
+// Auto-fetch user if token exists
+const authStore = useAuthStore();
+if (authStore.token) {
+  authStore.fetchUser();
+}
+
 app.mount("#app");
