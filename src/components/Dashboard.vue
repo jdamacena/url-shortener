@@ -9,14 +9,16 @@
       <div class="overflow-x-auto">
         <!-- Card layout for mobile, table for md+ -->
         <div class="flex flex-col gap-4 md:hidden">
-          <div v-for="url in urlStore.urls" :key="url._id" class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
+          <div v-for="url in urlStore.urls" :key="url._id"
+            class="bg-white shadow rounded-lg p-4 flex flex-col gap-2 transition-colors duration-150 cursor-pointer hover:bg-blue-50 active:bg-blue-100"
+            @click="openAnalytics(url)" @keydown.enter.space="openAnalytics(url)" tabindex="0">
             <div class="flex items-center gap-2">
               <span class="font-semibold">Short URL:</span>
               <a :href="`${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`" target="_blank"
-                class="text-blue-700 underline whitespace-nowrap">
+                class="text-blue-700 underline whitespace-nowrap" @click.stop>
                 /r/{{ url.shortId || url.shortUrl }}
               </a>
-              <button @click="copyLink(url)" :class="[
+              <button @click.stop="copyLink(url)" :class="[
                 'px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
                 copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
               ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
@@ -46,7 +48,7 @@
             </div>
             <div class="flex items-center gap-2">
               <span class="font-semibold">Active:</span>
-              <button @click="toggleActive(url)"
+              <button @click.stop="toggleActive(url)"
                 class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none"
                 :class="url.active ? 'bg-green-400' : 'bg-gray-300'" :aria-pressed="url.active"
                 :title="url.active ? 'Deactivate' : 'Activate'">
@@ -55,10 +57,7 @@
                 <span class="sr-only">Toggle Active</span>
               </button>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="font-semibold">Analytics:</span>
-              <router-link :to="`/analytics/${url.shortUrl}`" class="text-blue-500 underline">View</router-link>
-            </div>
+            <!-- Removed analytics link for mobile, now opens on card click -->
           </div>
         </div>
         <table class="w-full bg-white shadow rounded-lg min-w-0 hidden md:table">
@@ -68,15 +67,17 @@
               <th class="p-3 text-left">Original URL</th>
               <th class="p-3 text-center">Clicks</th>
               <th class="p-3 text-center">Active</th>
-              <th class="p-3 text-center">Analytics</th>
+              <!-- Removed Analytics column header -->
             </tr>
           </thead>
           <tbody>
-            <tr v-for="url in urlStore.urls" :key="url._id" :class="{ 'bg-gray-50': !url.active }">
+            <tr v-for="url in urlStore.urls" :key="url._id"
+              :class="[{ 'bg-gray-50': !url.active }, 'transition-colors duration-150 cursor-pointer hover:bg-blue-50 active:bg-blue-100']"
+              @click="openAnalytics(url)" @keydown.enter.space="openAnalytics(url)" tabindex="0">
               <td class="p-3 flex items-center gap-2 max-w-full md:max-w-none">
                 <a :href="`${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`" target="_blank"
-                  class="text-blue-700 underline whitespace-nowrap">/r/{{ url.shortId || url.shortUrl }}</a>
-                <button @click="copyLink(url)" :class="[
+                  class="text-blue-700 underline whitespace-nowrap" @click.stop>/r/{{ url.shortId || url.shortUrl }}</a>
+                <button @click.stop="copyLink(url)" :class="[
                   'ml-2 px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
                   copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
                 ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
@@ -99,7 +100,7 @@
               <td class="p-3 truncate max-w-full md:max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
               <td class="p-3 text-center">{{ url.clickCount }}</td>
               <td class="p-3 text-center">
-                <button @click="toggleActive(url)"
+                <button @click.stop="toggleActive(url)"
                   class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none"
                   :class="url.active ? 'bg-green-400' : 'bg-gray-300'" :aria-pressed="url.active"
                   :title="url.active ? 'Deactivate' : 'Activate'">
@@ -108,9 +109,7 @@
                   <span class="sr-only">Toggle Active</span>
                 </button>
               </td>
-              <td class="p-3 text-center">
-                <router-link :to="`/analytics/${url.shortUrl}`" class="text-blue-500 underline">View</router-link>
-              </td>
+              <!-- Removed Analytics link for desktop, now opens on row click -->
             </tr>
           </tbody>
         </table>
@@ -125,6 +124,7 @@ import { ref, onMounted, watch } from 'vue'
 import ShortenForm from './ShortenForm.vue'
 import { useUrlStore } from '../stores/urlStore'
 import { useAuthStore } from '../stores/authStore'
+import { useRouter } from 'vue-router'
 
 const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:3000';
 
@@ -135,6 +135,7 @@ export default {
     const urlStore = useUrlStore()
     const authStore = useAuthStore()
     const copiedUrl = ref(null)
+    const router = useRouter()
 
     onMounted(() => {
       if (authStore.user) {
@@ -170,7 +171,11 @@ export default {
       }, 1200)
     }
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL }
+    function openAnalytics(url) {
+      router.push(`/analytics/${url.shortUrl}`)
+    }
+
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics }
   }
 }
 </script>
