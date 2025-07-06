@@ -62,6 +62,18 @@
                 <span v-if="copiedUrl === url.shortUrl">Copied!</span>
                 <span v-else>Copy</span>
               </button>
+              <button @click.stop="showQr(url)"
+                class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                title="Show QR code">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <rect x="3" y="3" width="6" height="6" rx="1.5" />
+                  <rect x="15" y="3" width="6" height="6" rx="1.5" />
+                  <rect x="3" y="15" width="6" height="6" rx="1.5" />
+                  <rect x="15" y="15" width="6" height="6" rx="1.5" />
+                  <rect x="10" y="10" width="4" height="4" rx="1" />
+                </svg>
+              </button>
               <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
                 class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
             </div>
@@ -121,6 +133,18 @@
                   <span v-if="copiedUrl === url.shortUrl">Copied!</span>
                   <span v-else>Copy</span>
                 </button>
+                <button @click.stop="showQr(url)"
+                  class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                  title="Show QR code">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <rect x="3" y="3" width="6" height="6" rx="1.5" />
+                    <rect x="15" y="3" width="6" height="6" rx="1.5" />
+                    <rect x="3" y="15" width="6" height="6" rx="1.5" />
+                    <rect x="15" y="15" width="6" height="6" rx="1.5" />
+                    <rect x="10" y="10" width="4" height="4" rx="1" />
+                  </svg>
+                </button>
                 <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
                   class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
               </td>
@@ -143,6 +167,18 @@
       </div>
     </div>
     <div v-if="urlStore.error" class="mt-4 text-red-600 text-center">{{ urlStore.error }}</div>
+
+    <!-- QR Code Modal -->
+    <div v-if="showQrModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+      @mousedown.self="closeQr">
+      <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center relative" @mousedown.stop>
+        <button @click="closeQr"
+          class="absolute top-2 right-2 text-gray-400 hover:text-blue-600 text-2xl">&times;</button>
+        <h3 class="text-lg font-semibold mb-4">Scan QR Code</h3>
+        <QrcodeVue v-if="qrUrl" :value="qrUrl" :size="180" class="mb-2" />
+        <div class="text-xs text-gray-500 break-all max-w-xs text-center">{{ qrUrl }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -153,12 +189,13 @@ import Breadcrumbs from './Breadcrumbs.vue'
 import { useUrlStore } from '../stores/urlStore'
 import { useAuthStore } from '../stores/authStore'
 import { useRouter, useRoute } from 'vue-router'
+import QrcodeVue from 'qrcode.vue'
 
 const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:3000';
 
 export default {
   name: 'Dashboard',
-  components: { ShortenForm, Breadcrumbs },
+  components: { ShortenForm, Breadcrumbs, QrcodeVue },
   setup() {
     const urlStore = useUrlStore()
     const authStore = useAuthStore()
@@ -168,6 +205,8 @@ export default {
     const searchQuery = ref('')
     const filterStatus = ref('all')
     const sortBy = ref('createdAt-desc')
+    const qrUrl = ref(null)
+    const showQrModal = ref(false)
 
     // Initialize from URL query params
     onMounted(() => {
@@ -226,6 +265,16 @@ export default {
       router.push(`/analytics/${url.shortUrl}`)
     }
 
+    function showQr(url) {
+      qrUrl.value = `${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`
+      showQrModal.value = true
+    }
+
+    function closeQr() {
+      showQrModal.value = false
+      qrUrl.value = null
+    }
+
     const filteredSortedUrls = computed(() => {
       let urls = urlStore.urls.slice()
       // Filter
@@ -261,7 +310,11 @@ export default {
       return urls
     })
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls }
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl }
   }
 }
 </script>
+
+<style scoped>
+/* Add any component-specific styles here */
+</style>
