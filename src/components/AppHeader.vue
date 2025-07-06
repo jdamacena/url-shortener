@@ -5,14 +5,17 @@
         <img src="/favicon.ico" class="h-8" alt="Logo" />
         <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">URL Shortener</span>
       </router-link>
-      <button @click="toggleMenu" data-collapse-toggle="navbar-default" type="button" class="data-collapse-btn"
-        aria-controls="navbar-default" :aria-expanded="menuOpen">
-        <span class="sr-only">Open main menu</span>
-        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M1 1h15M1 7h15M1 13h15" />
-        </svg>
-      </button>
+      <div class="flex items-center gap-2">
+        <!-- Username moved back into the menu for all screen sizes -->
+        <button @click="toggleMenu" data-collapse-toggle="navbar-default" type="button" class="data-collapse-btn"
+          aria-controls="navbar-default" :aria-expanded="menuOpen">
+          <span class="sr-only">Open main menu</span>
+          <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15" />
+          </svg>
+        </button>
+      </div>
       <div :class="[menuOpen ? 'block' : 'hidden', 'w-full md:block md:w-auto']" id="navbar-default">
         <ul class="list">
           <li>
@@ -24,10 +27,10 @@
           <li>
             <router-link v-if="!authStore.user" to="/login" class="btn">Login</router-link>
           </li>
-          <li>
-            <div v-if="authStore.user" class="flex items-center gap-2 ml-4">
+          <li v-if="authStore.user">
+            <div class="flex items-center gap-2 ml-4">
               <span class="text-gray-900 dark:text-white text-sm">{{ authStore.user.username }}</span>
-              <button @click="logout" class="btn">Logout</button>
+              <button @click="logout" class="btn w-full text-left md:w-auto md:text-center">Logout</button>
             </div>
           </li>
         </ul>
@@ -70,6 +73,13 @@ export default {
 
 <style>
 @reference "../assets/styles/main.css";
+
+html,
+body,
+#app {
+  width: 100%;
+  overflow-x: hidden;
+}
 
 .navbar {
   @apply bg-white dark:bg-gray-900 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600;
