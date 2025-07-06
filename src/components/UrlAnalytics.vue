@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-2xl mx-auto mt-10">
+    <Breadcrumbs />
     <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">URL Analytics</h2>
     <div v-if="loading" class="text-center text-gray-500">Loading...</div>
     <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
@@ -122,10 +123,11 @@ import { ref, onMounted, computed, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import AnalyticsCharts from './AnalyticsCharts.vue'
+import Breadcrumbs from './Breadcrumbs.vue'
 
 export default {
   name: 'UrlAnalytics',
-  components: { AnalyticsCharts },
+  components: { AnalyticsCharts, Breadcrumbs },
   setup() {
     const route = useRoute()
     const urlStore = useUrlStore()
