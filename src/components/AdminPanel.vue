@@ -1,97 +1,153 @@
 <template>
     <div class="max-w-5xl mx-auto mt-10">
         <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">Admin Panel</h2>
-        <div v-if="loading" class="text-center text-gray-500">Loading...</div>
-        <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
+        <div v-if="selectedUser">
+            <button @click="selectedUser = null" class="mb-4 text-blue-600 hover:underline">&larr; Back to all
+                users</button>
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-2xl font-semibold mb-2">User Details</h3>
+                <div class="mb-2"><span class="font-semibold">Username:</span> {{ selectedUser.username }}</div>
+                <div class="mb-2"><span class="font-semibold">User ID:</span> <span class="break-all">{{
+                    selectedUser._id }}</span></div>
+                <div class="mb-2 flex gap-2">
+                    <button @click="deleteUser(selectedUser._id)" class="text-red-600 hover:underline">Delete
+                        User</button>
+                    <button @click="resetPassword(selectedUser._id)" class="text-blue-600 hover:underline">Reset
+                        Password</button>
+                </div>
+            </div>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h4 class="text-xl font-semibold mb-2">User's URLs</h4>
+                <div v-if="userUrls.length === 0" class="text-gray-500">No URLs for this user.</div>
+                <div v-else class="overflow-x-auto">
+                    <table class="w-full bg-white rounded-lg min-w-[900px]">
+                        <thead>
+                            <tr class="bg-blue-100">
+                                <th class="p-2 text-left min-w-[120px]">Short URL</th>
+                                <th class="p-2 text-left min-w-[300px]">Original URL</th>
+                                <th class="p-2 text-center min-w-[80px]">Clicks</th>
+                                <th class="p-2 text-center min-w-[80px]">Active</th>
+                                <th class="p-2 text-center min-w-[100px]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="url in userUrls" :key="url._id">
+                                <td class="p-2 max-w-xs break-all" :title="url.shortUrl || url.shortId">{{ url.shortUrl
+                                    || url.shortId }}</td>
+                                <td class="p-2 max-w-md break-all" :title="url.originalUrl">{{ url.originalUrl }}</td>
+                                <td class="p-2 text-center">{{ url.clickCount }}</td>
+                                <td class="p-2 text-center">{{ url.active ? 'Yes' : 'No' }}</td>
+                                <td class="p-2 text-center">
+                                    <button @click="toggleUrlActive(url)" class="text-blue-600 hover:underline mr-2">{{
+                                        url.active ? 'Deactivate' : 'Activate' }}</button>
+                                    <button @click="deleteUrl(url._id)"
+                                        class="text-red-600 hover:underline">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         <div v-else>
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
-                <input v-model="searchQuery" type="text"
-                    placeholder="Search users or URLs... (e.g. user:admin site:google.com status:active)"
-                    class="border rounded px-2 py-1 text-sm w-full md:w-96" />
-                <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
-                    <span v-for="tag in tagSuggestions" :key="tag.label" @click="appendTag(tag.example)"
-                        class="cursor-pointer bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold hover:bg-blue-200 transition">
-                        {{ tag.label }}
-                    </span>
-                </div>
-            </div>
-            <h3 class="text-xl font-semibold mb-2">Users</h3>
-            <!-- Responsive user list: table for md+, cards for mobile -->
-            <div class="flex flex-col gap-4 md:hidden mb-8">
-                <div v-for="user in filteredUsers" :key="user._id"
-                    class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
-                    <div><span class="font-semibold">Username:</span> {{ user.username }}</div>
-                    <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ user._id }}</span></div>
-                    <div>
-                        <button @click="deleteUser(user._id)" class="text-red-600 hover:underline">Delete</button>
+            <div v-if="loading" class="text-center text-gray-500">Loading...</div>
+            <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
+            <div v-else>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+                    <input v-model="searchQuery" type="text"
+                        placeholder="Search users or URLs... (e.g. user:admin site:google.com status:active)"
+                        class="border rounded px-2 py-1 text-sm w-full md:w-96" />
+                    <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
+                        <span v-for="tag in tagSuggestions" :key="tag.label" @click="appendTag(tag.example)"
+                            class="cursor-pointer bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold hover:bg-blue-200 transition">
+                            {{ tag.label }}
+                        </span>
                     </div>
                 </div>
-            </div>
-            <div class="overflow-x-auto mb-8 hidden md:block">
-                <table class="w-full bg-white shadow rounded-lg min-w-[600px]">
-                    <thead>
-                        <tr class="bg-blue-100">
-                            <th class="p-2 text-left min-w-[120px]">Username</th>
-                            <th class="p-2 text-left min-w-[220px]">User ID</th>
-                            <th class="p-2 text-center min-w-[100px]">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="user in filteredUsers" :key="user._id">
-                            <td class="p-2 max-w-xs truncate" :title="user.username">{{ user.username }}</td>
-                            <td class="p-2 max-w-xs break-all" :title="user._id">{{ user._id }}</td>
-                            <td class="p-2 text-center">
-                                <button @click="deleteUser(user._id)"
-                                    class="text-red-600 hover:underline">Delete</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <h3 class="text-xl font-semibold mb-2">All URLs</h3>
-            <!-- Responsive URL list: table for md+, cards for mobile -->
-            <div class="flex flex-col gap-4 md:hidden">
-                <div v-for="url in filteredUrls" :key="url._id"
-                    class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
-                    <div><span class="font-semibold">Short URL:</span> <span class="break-all">{{ url.shortUrl ||
-                        url.shortId }}</span></div>
-                    <div><span class="font-semibold">Original URL:</span> <span class="break-all">{{ url.originalUrl
-                            }}</span></div>
-                    <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ url.userId }}</span>
-                    </div>
-                    <div><span class="font-semibold">Clicks:</span> {{ url.clickCount }}</div>
-                    <div><span class="font-semibold">Active:</span> {{ url.active ? 'Yes' : 'No' }}</div>
-                    <div>
-                        <button @click="deleteUrl(url._id)" class="text-red-600 hover:underline">Delete</button>
+                <h3 class="text-xl font-semibold mb-2">Users</h3>
+                <!-- Responsive user list: table for md+, cards for mobile -->
+                <div class="flex flex-col gap-4 md:hidden mb-8">
+                    <div v-for="user in filteredUsers" :key="user._id"
+                        class="bg-white shadow rounded-lg p-4 flex flex-col gap-2 cursor-pointer hover:bg-blue-50 transition"
+                        @click="selectUser(user)">
+                        <div><span class="font-semibold">Username:</span> {{ user.username }}</div>
+                        <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ user._id }}</span>
+                        </div>
+                        <div>
+                            <button @click.stop="deleteUser(user._id)"
+                                class="text-red-600 hover:underline">Delete</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="overflow-x-auto hidden md:block">
-                <table class="w-full bg-white shadow rounded-lg min-w-[900px]">
-                    <thead>
-                        <tr class="bg-blue-100">
-                            <th class="p-2 text-left min-w-[120px]">Short URL</th>
-                            <th class="p-2 text-left min-w-[300px]">Original URL</th>
-                            <th class="p-2 text-left min-w-[220px]">User ID</th>
-                            <th class="p-2 text-center min-w-[80px]">Clicks</th>
-                            <th class="p-2 text-center min-w-[80px]">Active</th>
-                            <th class="p-2 text-center min-w-[100px]">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="url in filteredUrls" :key="url._id">
-                            <td class="p-2 max-w-xs break-all" :title="url.shortUrl || url.shortId">{{ url.shortUrl ||
-                                url.shortId }}</td>
-                            <td class="p-2 max-w-md break-all" :title="url.originalUrl">{{ url.originalUrl }}</td>
-                            <td class="p-2 max-w-xs break-all" :title="url.userId">{{ url.userId }}</td>
-                            <td class="p-2 text-center">{{ url.clickCount }}</td>
-                            <td class="p-2 text-center">{{ url.active ? 'Yes' : 'No' }}</td>
-                            <td class="p-2 text-center">
-                                <button @click="deleteUrl(url._id)" class="text-red-600 hover:underline">Delete</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto mb-8 hidden md:block">
+                    <table class="w-full bg-white shadow rounded-lg min-w-[600px]">
+                        <thead>
+                            <tr class="bg-blue-100">
+                                <th class="p-2 text-left min-w-[120px]">Username</th>
+                                <th class="p-2 text-left min-w-[220px]">User ID</th>
+                                <th class="p-2 text-center min-w-[100px]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="user in filteredUsers" :key="user._id"
+                                class="cursor-pointer hover:bg-blue-50 transition" @click="selectUser(user)">
+                                <td class="p-2 max-w-xs truncate" :title="user.username">{{ user.username }}</td>
+                                <td class="p-2 max-w-xs break-all" :title="user._id">{{ user._id }}</td>
+                                <td class="p-2 text-center">
+                                    <button @click.stop="deleteUser(user._id)"
+                                        class="text-red-600 hover:underline">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">All URLs</h3>
+                <!-- Responsive URL list: table for md+, cards for mobile -->
+                <div class="flex flex-col gap-4 md:hidden">
+                    <div v-for="url in filteredUrls" :key="url._id"
+                        class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
+                        <div><span class="font-semibold">Short URL:</span> <span class="break-all">{{ url.shortUrl ||
+                            url.shortId }}</span></div>
+                        <div><span class="font-semibold">Original URL:</span> <span class="break-all">{{ url.originalUrl
+                                }}</span></div>
+                        <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ url.userId }}</span>
+                        </div>
+                        <div><span class="font-semibold">Clicks:</span> {{ url.clickCount }}</div>
+                        <div><span class="font-semibold">Active:</span> {{ url.active ? 'Yes' : 'No' }}</div>
+                        <div>
+                            <button @click="deleteUrl(url._id)" class="text-red-600 hover:underline">Delete</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto hidden md:block">
+                    <table class="w-full bg-white shadow rounded-lg min-w-[900px]">
+                        <thead>
+                            <tr class="bg-blue-100">
+                                <th class="p-2 text-left min-w-[120px]">Short URL</th>
+                                <th class="p-2 text-left min-w-[300px]">Original URL</th>
+                                <th class="p-2 text-left min-w-[220px]">User ID</th>
+                                <th class="p-2 text-center min-w-[80px]">Clicks</th>
+                                <th class="p-2 text-center min-w-[80px]">Active</th>
+                                <th class="p-2 text-center min-w-[100px]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="url in filteredUrls" :key="url._id">
+                                <td class="p-2 max-w-xs break-all" :title="url.shortUrl || url.shortId">{{ url.shortUrl
+                                    ||
+                                    url.shortId }}</td>
+                                <td class="p-2 max-w-md break-all" :title="url.originalUrl">{{ url.originalUrl }}</td>
+                                <td class="p-2 max-w-xs break-all" :title="url.userId">{{ url.userId }}</td>
+                                <td class="p-2 text-center">{{ url.clickCount }}</td>
+                                <td class="p-2 text-center">{{ url.active ? 'Yes' : 'No' }}</td>
+                                <td class="p-2 text-center">
+                                    <button @click="deleteUrl(url._id)"
+                                        class="text-red-600 hover:underline">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -136,6 +192,8 @@ export default {
         const loading = ref(true)
         const error = ref('')
         const searchQuery = ref('')
+        const selectedUser = ref(null)
+        const userUrls = computed(() => selectedUser.value ? urls.value.filter(u => u.userId === selectedUser.value._id) : [])
 
         function appendTag(tag) {
             if (!searchQuery.value.endsWith(' ') && searchQuery.value.length > 0) searchQuery.value += ' ';
@@ -220,6 +278,48 @@ export default {
             return filtered
         })
 
+        function selectUser(user) {
+            selectedUser.value = user
+        }
+
+        async function resetPassword(userId) {
+            const newPassword = prompt('Enter a new password for this user:')
+            if (!newPassword) return
+            try {
+                const token = authStore.token || localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/admin/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    body: JSON.stringify({ userId, newPassword }),
+                })
+                if (!res.ok) throw new Error('Failed to reset password')
+                alert('Password reset successfully!')
+            } catch (e) {
+                error.value = e.message
+            }
+        }
+
+        async function toggleUrlActive(url) {
+            try {
+                const token = authStore.token || localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/url/${url.shortUrl || url.shortId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    body: JSON.stringify({ active: !url.active }),
+                })
+                if (!res.ok) throw new Error('Failed to update URL status')
+                await fetchData()
+            } catch (e) {
+                error.value = e.message
+            }
+        }
+
         async function deleteUser(userId) {
             if (!confirm('Delete this user and all their URLs?')) return
             try {
@@ -260,7 +360,7 @@ export default {
 
         onMounted(fetchData)
 
-        return { users, urls, loading, error, deleteUser, deleteUrl, searchQuery, filteredUsers, filteredUrls, tagSuggestions, appendTag }
+        return { users, urls, loading, error, deleteUser, deleteUrl, searchQuery, filteredUsers, filteredUrls, tagSuggestions, appendTag, selectedUser, selectUser, userUrls, resetPassword, toggleUrlActive }
     },
 }
 </script>
