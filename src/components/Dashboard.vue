@@ -3,6 +3,27 @@
     <Breadcrumbs />
     <ShortenForm class="py-8" />
     <h2 class="text-3xl font-bold mb-6 text-blue-700 text-center">Your Shortened URLs</h2>
+    <!-- Filter, Sort, and Search Controls -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+      <input v-model="searchQuery" type="text" placeholder="Search links..."
+        class="border rounded px-2 py-1 text-sm w-full md:w-64" />
+      <div class="flex gap-2">
+        <select v-model="filterStatus" class="border rounded px-2 py-1 text-sm">
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="expired">Expired</option>
+        </select>
+        <select v-model="sortBy" class="border rounded px-2 py-1 text-sm">
+          <option value="createdAt-desc">Newest</option>
+          <option value="createdAt-asc">Oldest</option>
+          <option value="clicks-desc">Most Clicks</option>
+          <option value="clicks-asc">Fewest Clicks</option>
+          <option value="active-desc">Active First</option>
+          <option value="active-asc">Inactive First</option>
+        </select>
+      </div>
+    </div>
+
     <div v-if="urlStore.loading" class="text-center text-gray-500">Loading...</div>
     <div v-else-if="urlStore.urls.length === 0" class="text-center text-gray-500">No URLs found. Start by shortening a
       URL!</div>
@@ -10,7 +31,7 @@
       <div class="overflow-x-auto">
         <!-- Card layout for mobile, table for md+ -->
         <div class="flex flex-col gap-4 md:hidden">
-          <div v-for="url in urlStore.urls" :key="url._id"
+          <div v-for="url in filteredSortedUrls" :key="url._id"
             class="bg-white shadow rounded-lg p-4 flex flex-col gap-2 transition-colors duration-150 cursor-pointer hover:bg-blue-50 active:bg-blue-100"
             @click="openAnalytics(url)" @keydown.enter.space="openAnalytics(url)" tabindex="0">
             <div class="flex items-center gap-2">
@@ -72,7 +93,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="url in urlStore.urls" :key="url._id"
+            <tr v-for="url in filteredSortedUrls" :key="url._id"
               :class="[{ 'bg-gray-50': !url.active }, 'transition-colors duration-150 cursor-pointer hover:bg-blue-50 active:bg-blue-100']"
               @click="openAnalytics(url)" @keydown.enter.space="openAnalytics(url)" tabindex="0">
               <td class="p-3 flex items-center gap-2 max-w-full md:max-w-none">
@@ -121,12 +142,12 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import ShortenForm from './ShortenForm.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
 import { useUrlStore } from '../stores/urlStore'
 import { useAuthStore } from '../stores/authStore'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:3000';
 
@@ -138,11 +159,22 @@ export default {
     const authStore = useAuthStore()
     const copiedUrl = ref(null)
     const router = useRouter()
+    const route = useRoute()
+    const searchQuery = ref('')
+    const filterStatus = ref('all')
+    const sortBy = ref('createdAt-desc')
 
+    // Initialize from URL query params
     onMounted(() => {
       if (authStore.user) {
         urlStore.fetchUrls()
       }
+      const q = route.query.q
+      const filter = route.query.filter
+      const sort = route.query.sort
+      if (typeof q === 'string') searchQuery.value = q
+      if (typeof filter === 'string') filterStatus.value = filter
+      if (typeof sort === 'string') sortBy.value = sort
     })
 
     // Watch for user becoming available after async fetch
@@ -155,6 +187,18 @@ export default {
       },
       { immediate: false }
     )
+
+    // Sync controls to URL
+    watch([searchQuery, filterStatus, sortBy], ([q, filter, sort]) => {
+      router.replace({
+        query: {
+          ...route.query,
+          q: q || undefined,
+          filter: filter !== 'all' ? filter : undefined,
+          sort: sort !== 'createdAt-desc' ? sort : undefined
+        }
+      })
+    })
 
     async function toggleActive(url) {
       try {
@@ -177,7 +221,42 @@ export default {
       router.push(`/analytics/${url.shortUrl}`)
     }
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics }
+    const filteredSortedUrls = computed(() => {
+      let urls = urlStore.urls.slice()
+      // Filter
+      if (filterStatus.value === 'active') {
+        urls = urls.filter(u => u.active && (!u.expiresAt || new Date(u.expiresAt) > new Date()))
+      } else if (filterStatus.value === 'expired') {
+        urls = urls.filter(u => u.expiresAt && new Date(u.expiresAt) < new Date())
+      }
+      // Search
+      if (searchQuery.value.trim()) {
+        const q = searchQuery.value.trim().toLowerCase()
+        urls = urls.filter(u =>
+          (u.originalUrl && u.originalUrl.toLowerCase().includes(q)) ||
+          (u.shortUrl && u.shortUrl.toLowerCase().includes(q)) ||
+          (u.shortId && u.shortId.toLowerCase().includes(q))
+        )
+      }
+      // Sort
+      switch (sortBy.value) {
+        case 'createdAt-desc':
+          urls.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); break;
+        case 'createdAt-asc':
+          urls.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); break;
+        case 'clicks-desc':
+          urls.sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0)); break;
+        case 'clicks-asc':
+          urls.sort((a, b) => (a.clickCount || 0) - (b.clickCount || 0)); break;
+        case 'active-desc':
+          urls.sort((a, b) => (b.active === a.active) ? 0 : b.active ? 1 : -1); break;
+        case 'active-asc':
+          urls.sort((a, b) => (a.active === b.active) ? 0 : a.active ? 1 : -1); break;
+      }
+      return urls
+    })
+
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls }
   }
 }
 </script>
