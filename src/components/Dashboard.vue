@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import ShortenForm from './ShortenForm.vue'
 import { useUrlStore } from '../stores/urlStore'
 import { useAuthStore } from '../stores/authStore'
@@ -85,6 +85,17 @@ export default {
         urlStore.fetchUrls()
       }
     })
+
+    // Watch for user becoming available after async fetch
+    watch(
+      () => authStore.user,
+      (user) => {
+        if (user) {
+          urlStore.fetchUrls()
+        }
+      },
+      { immediate: false }
+    )
 
     async function toggleActive(url) {
       try {
