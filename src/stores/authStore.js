@@ -51,15 +51,17 @@ export const useAuthStore = defineStore("auth", {
           },
           body: JSON.stringify({ username, password }),
         });
-        if (!response.ok) {
-          throw new Error("Failed to register");
-        }
         const data = await response.json();
+        if (!response.ok) {
+          this.error = data.error || "Registration failed";
+          throw new Error(this.error);
+        }
         this.user = data.user;
         this.token = data.token;
         localStorage.setItem("token", data.token);
       } catch (error) {
         this.error = error.message;
+        throw error;
       } finally {
         this.loading = false;
       }

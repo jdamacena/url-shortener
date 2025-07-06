@@ -10,7 +10,8 @@
         <label class="block mb-2 text-gray-700">Password</label>
         <input v-model="password" type="password" required class="w-full p-3 border rounded" />
       </div>
-      <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg p-3 shadow transition">Register</button>
+      <button type="submit"
+        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg p-3 shadow transition">Register</button>
       <div v-if="error" class="mt-4 text-red-600 text-center">{{ error }}</div>
       <div class="mt-4 text-center">
         <router-link to="/login" class="text-blue-700 underline">Already have an account? Login</router-link>
@@ -37,9 +38,11 @@ export default {
       error.value = ''
       try {
         await authStore.register(username.value, password.value)
-        router.push('/dashboard')
+        if (authStore.user && !authStore.error) {
+          router.push('/dashboard')
+        }
       } catch (e) {
-        error.value = e?.message || 'Registration failed.'
+        error.value = authStore.error || e?.message || 'Registration failed.'
       }
     }
 
