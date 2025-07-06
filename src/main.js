@@ -9,6 +9,7 @@ import UrlAnalytics from "./components/UrlAnalytics.vue";
 import NotFound from "./components/NotFound.vue";
 import LinkExpired from "./components/LinkExpired.vue";
 import Dashboard from "./components/Dashboard.vue";
+import AdminPanel from "./components/AdminPanel.vue";
 import "./assets/styles/main.css";
 import { useAuthStore } from "./stores/authStore";
 
@@ -21,6 +22,12 @@ const router = createRouter({
     { path: "/register", component: Register },
     { path: "/analytics/:shortUrl", component: UrlAnalytics },
     { path: "/expired", component: LinkExpired },
+    {
+      path: "/admin",
+      name: "Admin",
+      component: AdminPanel,
+      // You may want to add route guards for admin here
+    },
     { path: "/:pathMatch(.*)*", name: "NotFound", component: NotFound },
   ],
 });
