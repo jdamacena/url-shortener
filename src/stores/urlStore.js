@@ -35,6 +35,7 @@ export const useUrlStore = defineStore("url", {
         }
         this.currentUrl = data;
         this.urls.unshift(data);
+        return data; // <-- Add this line to return the created URL
       } catch (error) {
         this.error = error.message;
         throw error;
