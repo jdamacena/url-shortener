@@ -50,7 +50,7 @@
         <div class="mb-2 flex items-center gap-2">
           <span class="font-bold">Active:</span>
           <span :class="analytics.active ? 'text-green-600' : 'text-red-600'">{{ analytics.active ? 'Yes' : 'No'
-            }}</span>
+          }}</span>
           <button v-if="canEdit" @click="toggleActive" class="ml-2 px-2 py-1 text-xs rounded"
             :class="analytics.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'">
             {{ analytics.active ? 'Deactivate' : 'Activate' }}
@@ -61,6 +61,8 @@
           <span v-if="!editingExpiration">
             <span v-if="analytics.expiresAt">{{ new Date(analytics.expiresAt).toLocaleString() }}</span>
             <span v-else class="text-green-700">Never Expires</span>
+            <span v-if="analytics.expiresAt && new Date(analytics.expiresAt) < new Date()"
+              class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
             <button @click="startEditExpiration"
               class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Edit</button>
           </span>

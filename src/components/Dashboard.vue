@@ -40,6 +40,8 @@
                 <span v-if="copiedUrl === url.shortUrl">Copied!</span>
                 <span v-else>Copy</span>
               </button>
+              <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
+                class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
             </td>
             <td class="p-3 truncate max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
             <td class="p-3 text-center">{{ url.clickCount }}</td>
