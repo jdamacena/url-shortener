@@ -20,6 +20,23 @@ export default async function handler(req, res) {
     if (!url) {
       return res.status(404).json({ error: "Short URL not found or expired" });
     }
+
+    // Collect analytics before redirect
+    url.clickCount = (url.clickCount || 0) + 1;
+    url.lastAccessedAt = new Date();
+    url.referers = url.referers || [];
+    url.accessLogs = url.accessLogs || [];
+    if (req.headers.referer) {
+      url.referers.push(req.headers.referer);
+    }
+    url.accessLogs.push({
+      date: new Date(),
+      referer: req.headers.referer || "",
+      ip: req.headers["x-forwarded-for"] || req.connection?.remoteAddress || "",
+      userAgent: req.headers["user-agent"] || "",
+    });
+    await url.save();
+
     res.writeHead(302, { Location: url.originalUrl });
     res.end();
   } catch (error) {
