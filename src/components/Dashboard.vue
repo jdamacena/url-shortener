@@ -65,14 +65,7 @@
               <button @click.stop="showQr(url)"
                 class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
                 title="Show QR code">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <rect x="3" y="3" width="6" height="6" rx="1.5" />
-                  <rect x="15" y="3" width="6" height="6" rx="1.5" />
-                  <rect x="3" y="15" width="6" height="6" rx="1.5" />
-                  <rect x="15" y="15" width="6" height="6" rx="1.5" />
-                  <rect x="10" y="10" width="4" height="4" rx="1" />
-                </svg>
+                <i class="fa-solid fa-qrcode h-4 w-4"></i>
               </button>
               <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
                 class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
@@ -136,14 +129,7 @@
                 <button @click.stop="showQr(url)"
                   class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
                   title="Show QR code">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <rect x="3" y="3" width="6" height="6" rx="1.5" />
-                    <rect x="15" y="3" width="6" height="6" rx="1.5" />
-                    <rect x="3" y="15" width="6" height="6" rx="1.5" />
-                    <rect x="15" y="15" width="6" height="6" rx="1.5" />
-                    <rect x="10" y="10" width="4" height="4" rx="1" />
-                  </svg>
+                  <i class="fa-solid fa-qrcode h-4 w-4"></i>
                 </button>
                 <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
                   class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
@@ -175,8 +161,13 @@
         <button @click="closeQr"
           class="absolute top-2 right-2 text-gray-400 hover:text-blue-600 text-2xl">&times;</button>
         <h3 class="text-lg font-semibold mb-4">Scan QR Code</h3>
-        <QrcodeVue v-if="qrUrl" :value="qrUrl" :size="180" class="mb-2" />
-        <div class="text-xs text-gray-500 break-all max-w-xs text-center">{{ qrUrl }}</div>
+        <QrcodeVue v-if="qrUrl" :value="qrUrl" :size="180" class="mb-2" ref="qrCodeRef" />
+        <button @click="downloadQr"
+          class="mt-4 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center"
+          title="Download QR code">
+          <i class="fa-solid fa-download mr-2"></i> Download
+        </button>
+        <div class="text-xs text-gray-500 break-all max-w-xs text-center mt-2">{{ qrUrl }}</div>
       </div>
     </div>
   </div>
@@ -207,6 +198,7 @@ export default {
     const sortBy = ref('createdAt-desc')
     const qrUrl = ref(null)
     const showQrModal = ref(false)
+    const qrCodeRef = ref(null)
 
     // Initialize from URL query params
     onMounted(() => {
@@ -275,6 +267,47 @@ export default {
       qrUrl.value = null
     }
 
+    async function downloadQr() {
+      if (!qrUrl.value) return
+      try {
+        const svg = qrCodeRef.value?.$el?.querySelector('svg')
+        if (svg) {
+          const xml = new XMLSerializer().serializeToString(svg)
+          const svg64 = btoa(unescape(encodeURIComponent(xml)))
+          const image64 = `data:image/svg+xml;base64,${svg64}`
+          const img = new window.Image()
+          img.src = image64
+          await new Promise((resolve, reject) => {
+            img.onload = resolve
+            img.onerror = reject
+          })
+          const canvas = document.createElement('canvas')
+          canvas.width = svg.width.baseVal.value || 180
+          canvas.height = svg.height.baseVal.value || 180
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0)
+          const imgBlob = await new Promise(res => canvas.toBlob(res, 'image/png'))
+          const url = URL.createObjectURL(imgBlob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'qr-code.png'
+          document.body.appendChild(a)
+          a.click()
+          setTimeout(() => {
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          }, 100)
+        }
+      } catch (e) {
+        // fallback: copy link
+        navigator.clipboard.writeText(qrUrl.value)
+        copiedUrl.value = qrUrl.value
+        setTimeout(() => {
+          if (copiedUrl.value === qrUrl.value) copiedUrl.value = null
+        }, 1200)
+      }
+    }
+
     const filteredSortedUrls = computed(() => {
       let urls = urlStore.urls.slice()
       // Filter
@@ -310,7 +343,7 @@ export default {
       return urls
     })
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl }
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrCodeRef, downloadQr }
   }
 }
 </script>
