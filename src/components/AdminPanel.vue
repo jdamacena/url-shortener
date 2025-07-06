@@ -4,10 +4,22 @@
         <div v-if="loading" class="text-center text-gray-500">Loading...</div>
         <div v-else-if="error" class="text-center text-red-600">{{ error }}</div>
         <div v-else>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+                <input v-model="searchQuery" type="text"
+                    placeholder="Search users or URLs... (e.g. user:admin site:google.com status:active)"
+                    class="border rounded px-2 py-1 text-sm w-full md:w-96" />
+                <div class="flex flex-wrap gap-2 mt-2 md:mt-0">
+                    <span v-for="tag in tagSuggestions" :key="tag.label" @click="appendTag(tag.example)"
+                        class="cursor-pointer bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold hover:bg-blue-200 transition">
+                        {{ tag.label }}
+                    </span>
+                </div>
+            </div>
             <h3 class="text-xl font-semibold mb-2">Users</h3>
             <!-- Responsive user list: table for md+, cards for mobile -->
             <div class="flex flex-col gap-4 md:hidden mb-8">
-                <div v-for="user in users" :key="user._id" class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
+                <div v-for="user in filteredUsers" :key="user._id"
+                    class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
                     <div><span class="font-semibold">Username:</span> {{ user.username }}</div>
                     <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ user._id }}</span></div>
                     <div>
@@ -25,7 +37,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="user in users" :key="user._id">
+                        <tr v-for="user in filteredUsers" :key="user._id">
                             <td class="p-2 max-w-xs truncate" :title="user.username">{{ user.username }}</td>
                             <td class="p-2 max-w-xs break-all" :title="user._id">{{ user._id }}</td>
                             <td class="p-2 text-center">
@@ -39,9 +51,10 @@
             <h3 class="text-xl font-semibold mb-2">All URLs</h3>
             <!-- Responsive URL list: table for md+, cards for mobile -->
             <div class="flex flex-col gap-4 md:hidden">
-                <div v-for="url in urls" :key="url._id" class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
+                <div v-for="url in filteredUrls" :key="url._id"
+                    class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
                     <div><span class="font-semibold">Short URL:</span> <span class="break-all">{{ url.shortUrl ||
-                            url.shortId }}</span></div>
+                        url.shortId }}</span></div>
                     <div><span class="font-semibold">Original URL:</span> <span class="break-all">{{ url.originalUrl
                             }}</span></div>
                     <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ url.userId }}</span>
@@ -66,7 +79,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="url in urls" :key="url._id">
+                        <tr v-for="url in filteredUrls" :key="url._id">
                             <td class="p-2 max-w-xs break-all" :title="url.shortUrl || url.shortId">{{ url.shortUrl ||
                                 url.shortId }}</td>
                             <td class="p-2 max-w-md break-all" :title="url.originalUrl">{{ url.originalUrl }}</td>
@@ -85,10 +98,34 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+
+function parseTags(query) {
+    const tags = {};
+    let rest = query;
+    // Find all tag:value pairs
+    const tagPattern = /([a-z]+):([^\s]+)/gi;
+    let match;
+    while ((match = tagPattern.exec(query))) {
+        tags[match[1].toLowerCase()] = match[2];
+        rest = rest.replace(match[0], '');
+    }
+    return { tags, rest: rest.trim() };
+}
+
+const tagSuggestions = [
+    { label: 'user:', example: 'user:' },
+    { label: 'site:', example: 'site:' },
+    { label: 'url:', example: 'url:' },
+    { label: 'status:active', example: 'status:active' },
+    { label: 'status:inactive', example: 'status:inactive' },
+    { label: 'id:', example: 'id:' },
+    { label: 'short:', example: 'short:' },
+    { label: 'clicks:', example: 'clicks:' },
+];
 
 export default {
     name: 'AdminPanel',
@@ -98,6 +135,12 @@ export default {
         const urls = ref([])
         const loading = ref(true)
         const error = ref('')
+        const searchQuery = ref('')
+
+        function appendTag(tag) {
+            if (!searchQuery.value.endsWith(' ') && searchQuery.value.length > 0) searchQuery.value += ' ';
+            searchQuery.value += tag;
+        }
 
         async function fetchData() {
             loading.value = true
@@ -117,6 +160,65 @@ export default {
                 loading.value = false
             }
         }
+
+        const filteredUsers = computed(() => {
+            if (!searchQuery.value.trim()) return users.value
+            const { tags, rest } = parseTags(searchQuery.value)
+            let filtered = users.value
+            if (tags.user) {
+                filtered = filtered.filter(u => u.username && u.username.toLowerCase().includes(tags.user.toLowerCase()))
+            }
+            if (tags.id) {
+                filtered = filtered.filter(u => u._id && u._id.toLowerCase().includes(tags.id.toLowerCase()))
+            }
+            if (rest) {
+                const q = rest.toLowerCase()
+                filtered = filtered.filter(u =>
+                    (u.username && u.username.toLowerCase().includes(q)) ||
+                    (u._id && u._id.toLowerCase().includes(q))
+                )
+            }
+            return filtered
+        })
+
+        const filteredUrls = computed(() => {
+            if (!searchQuery.value.trim()) return urls.value
+            const { tags, rest } = parseTags(searchQuery.value)
+            let filtered = urls.value
+            if (tags.site || tags.url) {
+                const val = (tags.site || tags.url).toLowerCase()
+                filtered = filtered.filter(u => u.originalUrl && u.originalUrl.toLowerCase().includes(val))
+            }
+            if (tags.short) {
+                filtered = filtered.filter(u => (u.shortUrl && u.shortUrl.toLowerCase().includes(tags.short.toLowerCase())) || (u.shortId && u.shortId.toLowerCase().includes(tags.short.toLowerCase())))
+            }
+            if (tags.id) {
+                filtered = filtered.filter(u => u._id && u._id.toLowerCase().includes(tags.id.toLowerCase()))
+            }
+            if (tags.user) {
+                filtered = filtered.filter(u => u.userId && u.userId.toLowerCase().includes(tags.user.toLowerCase()))
+            }
+            if (tags.status) {
+                const val = tags.status.toLowerCase()
+                if (val === 'active') filtered = filtered.filter(u => u.active)
+                else if (val === 'inactive') filtered = filtered.filter(u => !u.active)
+            }
+            if (tags.clicks) {
+                filtered = filtered.filter(u => typeof u.clickCount === 'number' && u.clickCount.toString().includes(tags.clicks))
+            }
+            if (rest) {
+                const q = rest.toLowerCase()
+                filtered = filtered.filter(u =>
+                    (u.shortUrl && u.shortUrl.toLowerCase().includes(q)) ||
+                    (u.shortId && u.shortId.toLowerCase().includes(q)) ||
+                    (u.originalUrl && u.originalUrl.toLowerCase().includes(q)) ||
+                    (u.userId && u.userId.toLowerCase().includes(q)) ||
+                    (typeof u.clickCount === 'number' && u.clickCount.toString().includes(q)) ||
+                    (u.active ? 'active' : 'inactive').includes(q)
+                )
+            }
+            return filtered
+        })
 
         async function deleteUser(userId) {
             if (!confirm('Delete this user and all their URLs?')) return
@@ -158,7 +260,7 @@ export default {
 
         onMounted(fetchData)
 
-        return { users, urls, loading, error, deleteUser, deleteUrl }
+        return { users, urls, loading, error, deleteUser, deleteUrl, searchQuery, filteredUsers, filteredUrls, tagSuggestions, appendTag }
     },
 }
 </script>
