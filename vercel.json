@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/r/:shortId", "destination": "/api/redirect/:shortId" }
+    { "source": "/r/:shortId", "destination": "/api/redirect/:shortId" },  
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
