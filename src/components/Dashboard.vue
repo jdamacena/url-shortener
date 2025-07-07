@@ -171,7 +171,9 @@
         <button @click="closeQr"
           class="absolute top-2 right-2 text-gray-400 hover:text-blue-600 text-2xl">&times;</button>
         <h3 class="text-lg font-semibold mb-4">Scan QR Code</h3>
-        <QrcodeVue v-if="qrUrl" :value="qrUrl" :size="180" class="mb-2" ref="qrCodeRef" />
+        <div ref="qrWrapper">
+          <QrcodeVue v-if="qrUrl" :value="qrUrl" :size="180" class="mb-2" />
+        </div>
         <button @click="downloadQr"
           class="mt-4 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center"
           title="Download QR code">
@@ -184,7 +186,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import ShortenForm from './ShortenForm.vue'
 import Breadcrumbs from './Breadcrumbs.vue'
 import { useUrlStore } from '../stores/urlStore'
@@ -209,6 +211,7 @@ export default {
     const qrUrl = ref(null)
     const showQrModal = ref(false)
     const qrCodeRef = ref(null)
+    const qrWrapper = ref(null)
 
     // Initialize from URL query params
     onMounted(() => {
@@ -279,42 +282,21 @@ export default {
 
     async function downloadQr() {
       if (!qrUrl.value) return
-      try {
-        const svg = qrCodeRef.value?.$el?.querySelector('svg')
-        if (svg) {
-          const xml = new XMLSerializer().serializeToString(svg)
-          const svg64 = btoa(unescape(encodeURIComponent(xml)))
-          const image64 = `data:image/svg+xml;base64,${svg64}`
-          const img = new window.Image()
-          img.src = image64
-          await new Promise((resolve, reject) => {
-            img.onload = resolve
-            img.onerror = reject
-          })
-          const canvas = document.createElement('canvas')
-          canvas.width = svg.width.baseVal.value || 180
-          canvas.height = svg.height.baseVal.value || 180
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(img, 0, 0)
-          const imgBlob = await new Promise(res => canvas.toBlob(res, 'image/png'))
-          const url = URL.createObjectURL(imgBlob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = 'qr-code.png'
-          document.body.appendChild(a)
-          a.click()
-          setTimeout(() => {
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-          }, 100)
-        }
-      } catch (e) {
-        // fallback: copy link
-        navigator.clipboard.writeText(qrUrl.value)
-        copiedUrl.value = qrUrl.value
+      await nextTick()
+      let canvas = qrWrapper.value?.querySelector('canvas')
+      console.log('qrWrapper:', qrWrapper.value, 'canvas:', canvas)
+      if (canvas) {
+        const dataUrl = canvas.toDataURL('image/png')
+        const a = document.createElement('a')
+        a.href = dataUrl
+        a.download = 'qr-code.png'
+        document.body.appendChild(a)
+        a.click()
         setTimeout(() => {
-          if (copiedUrl.value === qrUrl.value) copiedUrl.value = null
-        }, 1200)
+          document.body.removeChild(a)
+        }, 100)
+      } else {
+        alert('Could not find QR canvas. See console for details.')
       }
     }
 
@@ -370,7 +352,7 @@ export default {
       return urls
     })
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrCodeRef, downloadQr, shareLink }
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrWrapper, downloadQr, shareLink }
   }
 }
 </script>
