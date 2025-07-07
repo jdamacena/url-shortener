@@ -67,6 +67,11 @@
                 title="Show QR code">
                 <i class="fa-solid fa-qrcode h-4 w-4"></i>
               </button>
+              <button @click.stop="shareLink(url)"
+                class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                title="Share link">
+                <i class="fa-solid fa-share-nodes h-4 w-4"></i>
+              </button>
               <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
                 class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
             </div>
@@ -130,6 +135,11 @@
                   class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
                   title="Show QR code">
                   <i class="fa-solid fa-qrcode h-4 w-4"></i>
+                </button>
+                <button @click.stop="shareLink(url)"
+                  class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                  title="Share link">
+                  <i class="fa-solid fa-share-nodes h-4 w-4"></i>
                 </button>
                 <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
                   class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
@@ -308,6 +318,23 @@ export default {
       }
     }
 
+    function shareLink(url) {
+      const link = `${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`
+      if (navigator.share) {
+        navigator.share({
+          title: 'Short Link',
+          text: 'Check out this short link:',
+          url: link
+        }).catch(() => { })
+      } else {
+        navigator.clipboard.writeText(link)
+        copiedUrl.value = url.shortUrl
+        setTimeout(() => {
+          if (copiedUrl.value === url.shortUrl) copiedUrl.value = null
+        }, 1200)
+      }
+    }
+
     const filteredSortedUrls = computed(() => {
       let urls = urlStore.urls.slice()
       // Filter
@@ -343,7 +370,7 @@ export default {
       return urls
     })
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrCodeRef, downloadQr }
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrCodeRef, downloadQr, shareLink }
   }
 }
 </script>
