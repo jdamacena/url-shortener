@@ -1,0 +1,37 @@
+{
+  "name": "url-shortener-monorepo",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.10",
+    "@vueuse/core": "^13.3.0",
+    "axios": "^1.10.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "flowbite": "^3.1.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.1",
+    "pinia": "^2.3.1",
+    "qrcode.vue": "^3.6.0",
+    "shortid": "^2.2.17",
+    "tailwindcss": "^4.1.10",
+    "validator": "^13.15.15",
+    "vue": "^3.2.0",
+    "vue-chartjs": "^5.3.2",
+    "vue-router": "^4.5.1"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "backend:start": "node server.js",
+    "backend:dev": "nodemon server.js",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.4",
+    "nodemon": "^3.1.10",
+    "vite": "^6.3.5"
+  }
+}
