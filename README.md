@@ -3,10 +3,6 @@
 A modern, production-ready URL shortener web application with robust analytics, JWT authentication, role-based admin panel, QR code and sharing features, and a beautiful responsive dashboard. Built with Node.js, MongoDB, and Vue 3 (SPA) using Vite and Tailwind CSS. Deployable on Vercel or any compatible serverless platform.
 
 ## Features
-=======
-See demo [here](https://jdamacena.github.io/url-shortener/).
-
-## Tech Stack
 
 - **JWT Authentication**: Secure login, registration, and persistent sessions.
 - **Role-based Access**: System admin and user roles, with a powerful admin panel for user and URL management.
