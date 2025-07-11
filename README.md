@@ -36,8 +36,8 @@ npm install
 
 1. Copy `.env.example` to `.env` and set your environment variables:
    ```env
-   MONGODB_URI=mongodb://localhost:27017/url_shortener
-   JWT_SECRET=your_jwt_secret_here
+   MONGODB_URI=mongodb://localhost:27017/url_shortener # MONGODB_URI=mongodb+srv://user:pass@cluster0.mongodb.net/url_shortener
+   JWT_SECRET=your_jwt_secret_here # 32 chars or more random string
    PORT=3000
    VITE_API_BASE_URL=http://localhost:3000/api
    ```
