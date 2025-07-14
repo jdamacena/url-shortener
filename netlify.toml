@@ -1,0 +1,69 @@
+# Build settings
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Redirects for short URLs and API routes
+[[redirects]]
+  from = "/r/:shortId"
+  to = "/.netlify/functions/redirect/:shortId"
+  status = 200
+
+# Authentication endpoints
+[[redirects]]
+  from = "/api/auth/login"
+  to = "/.netlify/functions/auth-login"
+  status = 200
+
+[[redirects]]
+  from = "/api/auth/register"
+  to = "/.netlify/functions/auth-register"
+  status = 200
+
+[[redirects]]
+  from = "/api/auth/user"
+  to = "/.netlify/functions/auth-user"
+  status = 200
+
+# URL management endpoints
+[[redirects]]
+  from = "/api/url/shorten"
+  to = "/.netlify/functions/url-shorten"
+  status = 200
+
+[[redirects]]
+  from = "/api/url/urls"
+  to = "/.netlify/functions/url-list"
+  status = 200
+
+[[redirects]]
+  from = "/api/url/:shortId"
+  to = "/.netlify/functions/url-update/:shortId"
+  status = 200
+
+# Analytics endpoint
+[[redirects]]
+  from = "/api/analytics/:shortUrl"
+  to = "/.netlify/functions/analytics/:shortUrl"
+  status = 200
+
+# Admin endpoint (handles GET, DELETE with different bodies)
+[[redirects]]
+  from = "/api/admin"
+  to = "/.netlify/functions/admin-panel"
+  status = 200
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variables
+[build.environment]
+  NODE_VERSION = "18"
+
+# Function settings
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"

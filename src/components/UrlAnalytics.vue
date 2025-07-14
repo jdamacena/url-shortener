@@ -65,7 +65,7 @@
           <div class="mb-2 flex flex-wrap items-center gap-2">
             <span class="font-bold">Active:</span>
             <span :class="analytics.active ? 'text-green-600' : 'text-red-600'">{{ analytics.active ? 'Yes' : 'No'
-              }}</span>
+            }}</span>
             <button v-if="canEdit" @click="toggleActive" class="ml-2 px-2 py-1 text-xs rounded"
               :class="analytics.active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'">
               {{ analytics.active ? 'Deactivate' : 'Activate' }}
@@ -178,7 +178,11 @@ export default {
     const qrWrapperModal = ref(null)
 
     const canEdit = computed(() => authStore.user)
-    const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:3000'
+
+    if (!import.meta.env.VITE_SITE_URL) {
+      throw new Error('VITE_SITE_URL environment variable is required but not set')
+    }
+    const BACKEND_BASE_URL = import.meta.env.VITE_SITE_URL
 
     onMounted(async () => {
       await fetchAnalytics()
@@ -217,7 +221,7 @@ export default {
     async function toggleActive() {
       try {
         const updated = await urlStore.toggleActive(analytics.value)
-        analytics.value.active = updated.active // update the UI immediately
+        analytics.value.active = updated.active
       } catch (e) {
         error.value = e?.message || 'Failed to toggle active status'
       }

@@ -194,7 +194,10 @@ import { useAuthStore } from '../stores/authStore'
 import { useRouter, useRoute } from 'vue-router'
 import QrcodeVue from 'qrcode.vue'
 
-const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:3000';
+if (!import.meta.env.VITE_SITE_URL) {
+  throw new Error('VITE_SITE_URL environment variable is required but not set')
+}
+const BACKEND_BASE_URL = import.meta.env.VITE_SITE_URL;
 
 export default {
   name: 'Dashboard',
@@ -319,13 +322,11 @@ export default {
 
     const filteredSortedUrls = computed(() => {
       let urls = urlStore.urls.slice()
-      // Filter
       if (filterStatus.value === 'active') {
         urls = urls.filter(u => u.active && (!u.expiresAt || new Date(u.expiresAt) > new Date()))
       } else if (filterStatus.value === 'expired') {
         urls = urls.filter(u => u.expiresAt && new Date(u.expiresAt) < new Date())
       }
-      // Search
       if (searchQuery.value.trim()) {
         const q = searchQuery.value.trim().toLowerCase()
         urls = urls.filter(u =>
@@ -334,7 +335,6 @@ export default {
           (u.shortId && u.shortId.toLowerCase().includes(q))
         )
       }
-      // Sort
       switch (sortBy.value) {
         case 'createdAt-desc':
           urls.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); break;

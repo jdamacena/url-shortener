@@ -9,7 +9,7 @@
                     <h3 class="text-2xl font-semibold mb-2">User Details</h3>
                     <div class="mb-2"><span class="font-semibold">Username:</span> {{ selectedUser.username }}</div>
                     <div class="mb-2"><span class="font-semibold">User ID:</span> <span class="break-all">{{
-                            selectedUser._id }}</span></div>
+                        selectedUser._id }}</span></div>
                     <div class="mb-2 flex gap-2">
                         <button @click="deleteUser(selectedUser._id)" class="text-red-600 hover:underline">Delete
                             User</button>
@@ -76,7 +76,7 @@
                             @click="selectUser(user)">
                             <div><span class="font-semibold">Username:</span> {{ user.username }}</div>
                             <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ user._id
-                                    }}</span>
+                            }}</span>
                             </div>
                             <div>
                                 <button @click.stop="deleteUser(user._id)"
@@ -113,12 +113,12 @@
                             class="bg-white shadow rounded-lg p-4 flex flex-col gap-2">
                             <div><span class="font-semibold">Short URL:</span> <span class="break-all">{{ url.shortUrl
                                 ||
-                                    url.shortId }}</span></div>
+                                url.shortId }}</span></div>
                             <div><span class="font-semibold">Original URL:</span> <span class="break-all">{{
                                 url.originalUrl
                                     }}</span></div>
                             <div><span class="font-semibold">User ID:</span> <span class="break-all">{{ url.userId
-                                    }}</span>
+                            }}</span>
                             </div>
                             <div><span class="font-semibold">Clicks:</span> {{ url.clickCount }}</div>
                             <div><span class="font-semibold">Active:</span> {{ url.active ? 'Yes' : 'No' }}</div>
@@ -172,7 +172,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+if (!import.meta.env.VITE_API_BASE_URL) {
+    throw new Error('VITE_API_BASE_URL environment variable is required but not set')
+}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 function parseTags(query) {
     const tags = {};

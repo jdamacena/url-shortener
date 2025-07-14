@@ -33,13 +33,12 @@ export const useUrlStore = defineStore("url", {
           throw new Error(data.error || "Error shortening URL");
         }
 
-        // Use the short URL from the API response
         if (data.shortId) {
           data.shortUrl = `${API_BASE_URL}/r/${data.shortId}`;
         }
         this.currentUrl = data;
         this.urls.unshift(data);
-        return data; // <-- Add this line to return the created URL
+        return data;
       } catch (error) {
         this.error = error.message;
         throw error;

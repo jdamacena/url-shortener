@@ -39,12 +39,13 @@ export default {
       result.value = null
       try {
         const newUrl = await urlStore.shortenUrl(url.value, noExpire.value ? null : expiresAt.value)
-        await urlStore.fetchUrls() // Refresh dashboard list
-        // Always use the response from shortenUrl for the result
+        await urlStore.fetchUrls()
         let shortUrl = newUrl.shortUrl
         if (!shortUrl && newUrl.shortId) {
-          const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-          shortUrl = `${base}/r/${newUrl.shortId}`
+          if (!import.meta.env.VITE_SITE_URL) {
+            throw new Error('VITE_SITE_URL environment variable is required but not set')
+          }
+          shortUrl = `${import.meta.env.VITE_SITE_URL}/r/${newUrl.shortId}`
         }
         result.value = { ...newUrl, shortUrl }
         if (result.value.shortUrl) {

@@ -1,6 +1,6 @@
 # URL Shortener
 
-A modern, production-ready URL shortener web application with robust analytics, JWT authentication, role-based admin panel, QR code and sharing features, and a beautiful responsive dashboard. Built with Node.js, MongoDB, and Vue 3 (SPA) using Vite and Tailwind CSS. Deployable on Vercel or any compatible serverless platform.
+A modern, production-ready URL shortener web application with robust analytics, JWT authentication, role-based admin panel, QR code and sharing features, and a beautiful responsive dashboard. Built with Node.js, MongoDB, and Vue 3 (SPA) using Vite and Tailwind CSS. Deployable on Netlify with serverless functions.
 
 ## Features
 
@@ -12,14 +12,14 @@ A modern, production-ready URL shortener web application with robust analytics, 
 - **QR Code & Sharing**: Generate QR codes for each link, download as PNG, and share links via Web Share API or clipboard.
 - **Admin Panel**: Manage users and URLs, search with tag-based queries, view user details, and perform admin actions.
 - **SPA Routing**: All non-API routes handled by the Vue SPA. Public short links use `/r/:shortId`.
-- **Production Ready**: Secure password hashing, CORS, error handling, and Vercel configuration for best-practice deployment.
+- **Production Ready**: Secure password hashing, CORS, error handling, and Netlify configuration for best-practice deployment.
 
 ## Tech Stack
 
-- **Backend**: Node.js (Vercel serverless API routes), MongoDB (Mongoose), JWT, bcryptjs
+- **Backend**: Node.js (Netlify serverless functions), MongoDB (Mongoose), JWT, bcryptjs
 - **Frontend**: Vue 3 (Vite), Pinia, Vue Router, Tailwind CSS, Chart.js (vue-chartjs), qrcode.vue
 - **Other Libraries**: shortid, validator, dotenv, axios
-- **Deployment**: Vercel (with `vercel.json` for SPA/API routing)
+- **Deployment**: Netlify (with `netlify.toml` for SPA/API routing)
 
 ## Getting Started
 
@@ -35,16 +35,26 @@ npm install
 ```
 
 1. Copy `.env.example` to `.env` and set your environment variables:
+
    ```env
-   MONGODB_URI=mongodb://localhost:27017/url_shortener # MONGODB_URI=mongodb+srv://user:pass@cluster0.mongodb.net/url_shortener
+   MONGODB_URI=mongodb://localhost:27017/url_shortener
    JWT_SECRET=your_jwt_secret_here # 32 chars or more random string
-   PORT=3000
-   VITE_API_BASE_URL=http://localhost:3000/api
+   # For local development with Netlify
+   VITE_API_BASE_URL=http://localhost:8888
+   VITE_SITE_URL=http://localhost:8888
    ```
+
 2. Start the development server:
+
    ```powershell
+   # Option 1: Netlify Dev (Recommended - includes function emulation)
+   npm install -g netlify-cli
+   npm run netlify:dev
+   # App runs at http://localhost:8888
+
+   # Option 2: Vite only (for frontend development)
    npm run dev
-   # App runs at http://localhost:5173 (frontend) and http://localhost:3000/api (backend)
+   # Frontend runs at http://localhost:5173
    ```
 
 ### Production Build

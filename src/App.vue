@@ -23,7 +23,6 @@ export default {
   setup() {
     const authStore = useAuthStore();
 
-    // Revalidate user session on app load
     onMounted(() => {
       authStore.fetchUser();
     });

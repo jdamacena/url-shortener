@@ -1,5 +1,5 @@
 {
-  "name": "url-shortener-monorepo",
+  "name": "url-shortener",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
@@ -25,6 +25,7 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
+    "netlify:dev": "netlify dev",
     "backend:start": "node server.js",
     "backend:dev": "nodemon server.js",
     "test": "echo \"No test specified\" && exit 0"

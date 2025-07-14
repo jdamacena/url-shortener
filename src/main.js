@@ -26,7 +26,6 @@ const router = createRouter({
       path: "/admin",
       name: "Admin",
       component: AdminPanel,
-      // You may want to add route guards for admin here
     },
     { path: "/:pathMatch(.*)*", name: "NotFound", component: NotFound },
   ],
@@ -38,7 +37,6 @@ const app = createApp(App);
 app.use(pinia);
 app.use(router);
 
-// Auto-fetch user if token exists
 const authStore = useAuthStore();
 if (authStore.token) {
   authStore.fetchUser();
