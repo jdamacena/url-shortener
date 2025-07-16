@@ -11,7 +11,21 @@ export async function handler(event, context) {
 
   try {
     await dbConnect();
-    const { shortId } = event.pathParameters;
+
+    // Extract public path: use event.path or parse pathname from event.rawUrl
+    const publicPath =
+      event.path || (event.rawUrl ? new URL(event.rawUrl).pathname : "");
+
+    // Derive shortId from pathParameters or publicPath
+    const shortId =
+      event.pathParameters?.shortId ?? publicPath.replace(/^\/r\//, "");
+
+    if (!shortId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Missing shortId in path" }),
+      };
+    }
 
     const url = await Url.findOne({
       shortUrl: shortId,
