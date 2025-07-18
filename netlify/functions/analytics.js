@@ -26,7 +26,10 @@ export async function handler(event, context) {
     const user = authenticateUser(event);
 
     // Extract shortUrl from path parameters
-    const shortUrl = event.pathParameters?.shortUrl;
+    const publicPath =
+      event.path || (event.rawUrl ? new URL(event.rawUrl).pathname : "");
+
+    const shortUrl = publicPath.replace(/^\/api\/analytics\//, "");
 
     await dbConnect();
     const url = await Url.findOne({ shortUrl, userId: user.userId });
