@@ -25,6 +25,10 @@
           <option value="clicks-asc">Fewest Clicks</option>
           <option value="active-desc">Active First</option>
           <option value="active-asc">Inactive First</option>
+          <option value="shortUrl-asc">Short URL A-Z</option>
+          <option value="shortUrl-desc">Short URL Z-A</option>
+          <option value="originalUrl-asc">Original URL A-Z</option>
+          <option value="originalUrl-desc">Original URL Z-A</option>
         </select>
       </div>
     </div>
@@ -104,10 +108,50 @@
         <table class="w-full bg-white shadow rounded-lg hidden md:table table-fixed">
           <thead class="table-header-group">
             <tr class="bg-blue-100">
-              <th class="p-3 text-left w-2/5">Short URL</th>
-              <th class="p-3 text-left w-2/5">Original URL</th>
-              <th class="p-3 text-center w-1/10">Clicks</th>
-              <th class="p-3 text-center w-1/10">Active</th>
+              <th class="p-3 text-left w-2/5 cursor-pointer hover:bg-blue-200 transition-colors select-none"
+                @click="setSortBy('shortUrl')" :class="{ 'bg-blue-200': sortBy.startsWith('shortUrl') }">
+                <div class="flex items-center justify-between">
+                  Short URL
+                  <span class="text-xs">
+                    <i v-if="sortBy === 'shortUrl-asc'" class="fa-solid fa-sort-up"></i>
+                    <i v-else-if="sortBy === 'shortUrl-desc'" class="fa-solid fa-sort-down"></i>
+                    <i v-else class="fa-solid fa-sort text-gray-400"></i>
+                  </span>
+                </div>
+              </th>
+              <th class="p-3 text-left w-2/5 cursor-pointer hover:bg-blue-200 transition-colors select-none"
+                @click="setSortBy('originalUrl')" :class="{ 'bg-blue-200': sortBy.startsWith('originalUrl') }">
+                <div class="flex items-center justify-between">
+                  Original URL
+                  <span class="text-xs">
+                    <i v-if="sortBy === 'originalUrl-asc'" class="fa-solid fa-sort-up"></i>
+                    <i v-else-if="sortBy === 'originalUrl-desc'" class="fa-solid fa-sort-down"></i>
+                    <i v-else class="fa-solid fa-sort text-gray-400"></i>
+                  </span>
+                </div>
+              </th>
+              <th class="p-3 text-center w-1/10 cursor-pointer hover:bg-blue-200 transition-colors select-none"
+                @click="setSortBy('clicks')" :class="{ 'bg-blue-200': sortBy.startsWith('clicks') }">
+                <div class="flex items-center justify-center gap-1">
+                  Clicks
+                  <span class="text-xs">
+                    <i v-if="sortBy === 'clicks-asc'" class="fa-solid fa-sort-up"></i>
+                    <i v-else-if="sortBy === 'clicks-desc'" class="fa-solid fa-sort-down"></i>
+                    <i v-else class="fa-solid fa-sort text-gray-400"></i>
+                  </span>
+                </div>
+              </th>
+              <th class="p-3 text-center w-1/10 cursor-pointer hover:bg-blue-200 transition-colors select-none"
+                @click="setSortBy('active')" :class="{ 'bg-blue-200': sortBy.startsWith('active') }">
+                <div class="flex items-center justify-center gap-1">
+                  Active
+                  <span class="text-xs">
+                    <i v-if="sortBy === 'active-asc'" class="fa-solid fa-sort-up"></i>
+                    <i v-else-if="sortBy === 'active-desc'" class="fa-solid fa-sort-down"></i>
+                    <i v-else class="fa-solid fa-sort text-gray-400"></i>
+                  </span>
+                </div>
+              </th>
               <!-- Removed Analytics column header -->
             </tr>
           </thead>
@@ -119,7 +163,7 @@
                 <div class="flex items-center gap-2 min-w-0">
                   <a :href="`${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`" target="_blank"
                     class="text-blue-700 underline whitespace-nowrap flex-shrink-0" @click.stop>/r/{{ url.shortId ||
-                    url.shortUrl }}</a>
+                      url.shortUrl }}</a>
                   <div class="flex items-center gap-1 flex-shrink-0">
                     <button @click.stop="copyLink(url)" :class="[
                       'px-1.5 py-1 rounded transition-colors focus:outline-none flex items-center gap-1 text-xs',
@@ -329,6 +373,17 @@ export default {
       }
     }
 
+    function setSortBy(field) {
+      if (sortBy.value === `${field}-desc`) {
+        sortBy.value = `${field}-asc`
+      } else if (sortBy.value === `${field}-asc`) {
+        sortBy.value = `${field}-desc`
+      } else {
+        // Default to descending for clicks and ascending for text fields
+        sortBy.value = field === 'clicks' ? `${field}-desc` : `${field}-asc`
+      }
+    }
+
     const filteredSortedUrls = computed(() => {
       let urls = urlStore.urls.slice()
       if (filterStatus.value === 'active') {
@@ -357,11 +412,19 @@ export default {
           urls.sort((a, b) => (b.active === a.active) ? 0 : b.active ? 1 : -1); break;
         case 'active-asc':
           urls.sort((a, b) => (a.active === b.active) ? 0 : a.active ? 1 : -1); break;
+        case 'shortUrl-asc':
+          urls.sort((a, b) => (a.shortId || a.shortUrl || '').localeCompare(b.shortId || b.shortUrl || '')); break;
+        case 'shortUrl-desc':
+          urls.sort((a, b) => (b.shortId || b.shortUrl || '').localeCompare(a.shortId || a.shortUrl || '')); break;
+        case 'originalUrl-asc':
+          urls.sort((a, b) => (a.originalUrl || '').localeCompare(b.originalUrl || '')); break;
+        case 'originalUrl-desc':
+          urls.sort((a, b) => (b.originalUrl || '').localeCompare(a.originalUrl || '')); break;
       }
       return urls
     })
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrWrapper, downloadQr, shareLink }
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrWrapper, downloadQr, shareLink, setSortBy }
   }
 }
 </script>
