@@ -123,8 +123,8 @@
               </div>
               <div id="url-actions" class="flex items-center gap-2">
                 <button @click.stop="copyLink(url)" :class="[
-                  'px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
-                  copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
+                  'px-2 py-1 rounded transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex items-center gap-1 transform hover:scale-105 active:scale-95',
+                  copiedUrl === url.shortUrl ? 'bg-green-100 text-green-700 shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-800'
                 ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
                   <svg v-if="copiedUrl === url.shortUrl" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline"
                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,12 +140,12 @@
                   <span v-else>Copy</span>
                 </button>
                 <button @click.stop="showQr(url)"
-                  class="px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                  class="px-2 py-1 rounded bg-gray-100 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transform hover:scale-105 active:scale-95"
                   title="Show QR code">
                   <i class="fa-solid fa-qrcode h-4 w-4"></i>
                 </button>
                 <button @click.stop="shareLink(url)"
-                  class="px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                  class="px-2 py-1 rounded bg-gray-100 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transform hover:scale-105 active:scale-95"
                   title="Share link">
                   <i class="fa-solid fa-share-nodes h-4 w-4"></i>
                 </button>
@@ -164,10 +164,24 @@
             <div class="flex items-center gap-2">
               <span class="font-semibold">Active:</span>
               <button @click.stop="toggleActive(url)"
-                class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none"
-                :class="url.active ? 'bg-green-400' : 'bg-gray-300'" :aria-pressed="url.active"
-                :title="url.active ? 'Deactivate' : 'Activate'">
-                <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                class="relative inline-flex h-6 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                :class="[
+                  url.active ? 'bg-green-400' : 'bg-gray-300',
+                  loadingStates.has(url._id || url.shortUrl) ? 'animate-pulse' : ''
+                ]" :aria-pressed="url.active" :disabled="loadingStates.has(url._id || url.shortUrl)"
+                :title="loadingStates.has(url._id || url.shortUrl) ? 'Updating...' : (url.active ? 'Deactivate' : 'Activate')">
+                <div v-if="loadingStates.has(url._id || url.shortUrl)"
+                  class="absolute inset-0 flex items-center justify-center">
+                  <svg class="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                  </svg>
+                </div>
+                <span v-else
+                  class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200"
                   :class="url.active ? 'translate-x-6' : 'translate-x-1'"></span>
                 <span class="sr-only">Toggle Active</span>
               </button>
@@ -236,8 +250,8 @@
                       url.shortUrl }}</a>
                   <div class="flex items-center gap-1 flex-shrink-0">
                     <button @click.stop="copyLink(url)" :class="[
-                      'px-1.5 py-1 rounded transition-colors focus:outline-none flex items-center gap-1 text-xs',
-                      copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
+                      'px-1.5 py-1 rounded transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex items-center gap-1 text-xs transform hover:scale-105 active:scale-95',
+                      copiedUrl === url.shortUrl ? 'bg-green-100 text-green-700 shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-800'
                     ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
                       <svg v-if="copiedUrl === url.shortUrl" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -251,12 +265,12 @@
                       </svg>
                     </button>
                     <button @click.stop="showQr(url)"
-                      class="px-1.5 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                      class="px-1.5 py-1 rounded bg-gray-100 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transform hover:scale-105 active:scale-95"
                       title="Show QR code">
                       <i class="fa-solid fa-qrcode h-3 w-3"></i>
                     </button>
                     <button @click.stop="shareLink(url)"
-                      class="px-1.5 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                      class="px-1.5 py-1 rounded bg-gray-100 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transform hover:scale-105 active:scale-95"
                       title="Share link">
                       <i class="fa-solid fa-share-nodes h-3 w-3"></i>
                     </button>
@@ -271,10 +285,24 @@
               <td class="p-3 text-center w-1/10">{{ url.clickCount }}</td>
               <td class="p-3 text-center w-1/10">
                 <button @click.stop="toggleActive(url)"
-                  class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none"
-                  :class="url.active ? 'bg-green-400' : 'bg-gray-300'" :aria-pressed="url.active"
-                  :title="url.active ? 'Deactivate' : 'Activate'">
-                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform"
+                  class="relative inline-flex h-6 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  :class="[
+                    url.active ? 'bg-green-400' : 'bg-gray-300',
+                    loadingStates.has(url._id || url.shortUrl) ? 'animate-pulse' : ''
+                  ]" :aria-pressed="url.active" :disabled="loadingStates.has(url._id || url.shortUrl)"
+                  :title="loadingStates.has(url._id || url.shortUrl) ? 'Updating...' : (url.active ? 'Deactivate' : 'Activate')">
+                  <div v-if="loadingStates.has(url._id || url.shortUrl)"
+                    class="absolute inset-0 flex items-center justify-center">
+                    <svg class="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                      viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                      </path>
+                    </svg>
+                  </div>
+                  <span v-else
+                    class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200"
                     :class="url.active ? 'translate-x-6' : 'translate-x-1'"></span>
                   <span class="sr-only">Toggle Active</span>
                 </button>
@@ -338,6 +366,7 @@ export default {
     const showQrModal = ref(false)
     const qrCodeRef = ref(null)
     const qrWrapper = ref(null)
+    const loadingStates = ref(new Set()) // Track loading states for individual URLs
 
     // Initialize from URL query params
     onMounted(() => {
@@ -376,10 +405,16 @@ export default {
     })
 
     async function toggleActive(url) {
+      const urlId = url._id || url.shortUrl
+      loadingStates.value.add(urlId)
       try {
         await urlStore.toggleActive(url)
+        // Add a small delay to show the loading state
+        await new Promise(resolve => setTimeout(resolve, 200))
       } catch (e) {
         // error handled in store
+      } finally {
+        loadingStates.value.delete(urlId)
       }
     }
 
@@ -389,7 +424,7 @@ export default {
       copiedUrl.value = url.shortUrl
       setTimeout(() => {
         if (copiedUrl.value === url.shortUrl) copiedUrl.value = null
-      }, 1200)
+      }, 2000) // Increased from 1200ms to 2000ms for better UX
     }
 
     function openAnalytics(url) {
@@ -439,7 +474,7 @@ export default {
         copiedUrl.value = url.shortUrl
         setTimeout(() => {
           if (copiedUrl.value === url.shortUrl) copiedUrl.value = null
-        }, 1200)
+        }, 2000)
       }
     }
 
@@ -494,7 +529,7 @@ export default {
       return urls
     })
 
-    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrWrapper, downloadQr, shareLink, setSortBy }
+    return { urlStore, authStore, toggleActive, copyLink, copiedUrl, BACKEND_BASE_URL, openAnalytics, searchQuery, filterStatus, sortBy, filteredSortedUrls, showQr, closeQr, showQrModal, qrUrl, qrWrapper, downloadQr, shareLink, setSortBy, loadingStates }
   }
 }
 </script>
