@@ -33,47 +33,51 @@
     <div v-else-if="urlStore.urls.length === 0" class="text-center text-gray-500">No URLs found. Start by shortening a
       URL!</div>
     <div v-else>
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto md:overflow-x-visible">
         <!-- Card layout for mobile, table for md+ -->
         <div class="flex flex-col gap-4 md:hidden">
           <div v-for="url in filteredSortedUrls" :key="url._id"
             class="bg-white shadow rounded-lg p-4 flex flex-col gap-2 transition-colors duration-150 cursor-pointer hover:bg-blue-50 active:bg-blue-100"
             @click="openAnalytics(url)" @keydown.enter.space="openAnalytics(url)" tabindex="0">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold">Short URL:</span>
-              <a :href="`${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`" target="_blank"
-                class="text-blue-700 underline whitespace-nowrap" @click.stop>
-                /r/{{ url.shortId || url.shortUrl }}
-              </a>
-              <button @click.stop="copyLink(url)" :class="[
-                'px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
-                copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
-              ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
-                <svg v-if="copiedUrl === url.shortUrl" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M16 4H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2V4h6V2" />
-                </svg>
-                <span v-if="copiedUrl === url.shortUrl">Copied!</span>
-                <span v-else>Copy</span>
-              </button>
-              <button @click.stop="showQr(url)"
-                class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
-                title="Show QR code">
-                <i class="fa-solid fa-qrcode h-4 w-4"></i>
-              </button>
-              <button @click.stop="shareLink(url)"
-                class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
-                title="Share link">
-                <i class="fa-solid fa-share-nodes h-4 w-4"></i>
-              </button>
-              <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
-                class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold">Short URL:</span>
+                <a :href="`${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`" target="_blank"
+                  class="text-blue-700 underline whitespace-nowrap truncate" @click.stop>
+                  /r/{{ url.shortId || url.shortUrl }}
+                </a>
+              </div>
+              <div id="url-actions" class="flex items-center gap-2">
+                <button @click.stop="copyLink(url)" :class="[
+                  'px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
+                  copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
+                ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
+                  <svg v-if="copiedUrl === url.shortUrl" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M16 4H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2V4h6V2" />
+                  </svg>
+                  <span v-if="copiedUrl === url.shortUrl">Copied!</span>
+                  <span v-else>Copy</span>
+                </button>
+                <button @click.stop="showQr(url)"
+                  class="px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                  title="Show QR code">
+                  <i class="fa-solid fa-qrcode h-4 w-4"></i>
+                </button>
+                <button @click.stop="shareLink(url)"
+                  class="px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                  title="Share link">
+                  <i class="fa-solid fa-share-nodes h-4 w-4"></i>
+                </button>
+                <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
+                  class="px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
+              </div>
             </div>
             <div class="flex items-center gap-2">
               <span class="font-semibold">Original URL:</span>
@@ -97,13 +101,13 @@
             <!-- Removed analytics link for mobile, now opens on card click -->
           </div>
         </div>
-        <table class="w-full bg-white shadow rounded-lg min-w-0 hidden md:table">
+        <table class="w-full bg-white shadow rounded-lg hidden md:table table-fixed">
           <thead class="table-header-group">
             <tr class="bg-blue-100">
-              <th class="p-3 text-left">Short URL</th>
-              <th class="p-3 text-left">Original URL</th>
-              <th class="p-3 text-center">Clicks</th>
-              <th class="p-3 text-center">Active</th>
+              <th class="p-3 text-left w-2/5">Short URL</th>
+              <th class="p-3 text-left w-2/5">Original URL</th>
+              <th class="p-3 text-center w-1/10">Clicks</th>
+              <th class="p-3 text-center w-1/10">Active</th>
               <!-- Removed Analytics column header -->
             </tr>
           </thead>
@@ -111,42 +115,47 @@
             <tr v-for="url in filteredSortedUrls" :key="url._id"
               :class="[{ 'bg-gray-50': !url.active }, 'transition-colors duration-150 cursor-pointer hover:bg-blue-50 active:bg-blue-100']"
               @click="openAnalytics(url)" @keydown.enter.space="openAnalytics(url)" tabindex="0">
-              <td class="p-3 flex items-center gap-2 max-w-full md:max-w-none">
-                <a :href="`${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`" target="_blank"
-                  class="text-blue-700 underline whitespace-nowrap" @click.stop>/r/{{ url.shortId || url.shortUrl }}</a>
-                <button @click.stop="copyLink(url)" :class="[
-                  'ml-2 px-2 py-1 rounded transition-colors focus:outline-none flex items-center gap-1',
-                  copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
-                ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
-                  <svg v-if="copiedUrl === url.shortUrl" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M16 4H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2V4h6V2" />
-                  </svg>
-                  <span v-if="copiedUrl === url.shortUrl">Copied!</span>
-                  <span v-else>Copy</span>
-                </button>
-                <button @click.stop="showQr(url)"
-                  class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
-                  title="Show QR code">
-                  <i class="fa-solid fa-qrcode h-4 w-4"></i>
-                </button>
-                <button @click.stop="shareLink(url)"
-                  class="ml-2 px-2 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
-                  title="Share link">
-                  <i class="fa-solid fa-share-nodes h-4 w-4"></i>
-                </button>
-                <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
-                  class="ml-2 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
+              <td class="p-3 w-2/5">
+                <div class="flex items-center gap-2 min-w-0">
+                  <a :href="`${BACKEND_BASE_URL}/r/${url.shortId || url.shortUrl}`" target="_blank"
+                    class="text-blue-700 underline whitespace-nowrap flex-shrink-0" @click.stop>/r/{{ url.shortId ||
+                    url.shortUrl }}</a>
+                  <div class="flex items-center gap-1 flex-shrink-0">
+                    <button @click.stop="copyLink(url)" :class="[
+                      'px-1.5 py-1 rounded transition-colors focus:outline-none flex items-center gap-1 text-xs',
+                      copiedUrl === url.shortUrl ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-blue-200 hover:text-blue-800'
+                    ]" :title="copiedUrl === url.shortUrl ? 'Copied!' : 'Copy link'">
+                      <svg v-if="copiedUrl === url.shortUrl" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M16 4H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 2V4h6V2" />
+                      </svg>
+                    </button>
+                    <button @click.stop="showQr(url)"
+                      class="px-1.5 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                      title="Show QR code">
+                      <i class="fa-solid fa-qrcode h-3 w-3"></i>
+                    </button>
+                    <button @click.stop="shareLink(url)"
+                      class="px-1.5 py-1 rounded bg-gray-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold flex items-center"
+                      title="Share link">
+                      <i class="fa-solid fa-share-nodes h-3 w-3"></i>
+                    </button>
+                    <span v-if="url.expiresAt && new Date(url.expiresAt) < new Date()"
+                      class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-xs font-semibold">Expired</span>
+                  </div>
+                </div>
               </td>
-              <td class="p-3 truncate max-w-full md:max-w-xs" :title="url.originalUrl">{{ url.originalUrl }}</td>
-              <td class="p-3 text-center">{{ url.clickCount }}</td>
-              <td class="p-3 text-center">
+              <td class="p-3 w-2/5">
+                <div class="truncate" :title="url.originalUrl">{{ url.originalUrl }}</div>
+              </td>
+              <td class="p-3 text-center w-1/10">{{ url.clickCount }}</td>
+              <td class="p-3 text-center w-1/10">
                 <button @click.stop="toggleActive(url)"
                   class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none"
                   :class="url.active ? 'bg-green-400' : 'bg-gray-300'" :aria-pressed="url.active"
