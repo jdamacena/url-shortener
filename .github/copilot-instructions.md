@@ -105,6 +105,29 @@ This is a Vue 3 URL shortener with Netlify Functions backend, MongoDB database, 
 - Use try/catch blocks for all async operations
 - Provide fallback UI for error states
 
+## UX/UI Best Practices
+
+### Loading States & User Feedback
+- Always implement skeleton loading that mirrors actual content structure
+- Provide immediate visual feedback for all user interactions (buttons, toggles, forms)
+- Use loading states for async operations with spinners and disabled states
+- Implement micro-interactions (hover effects, scale transforms, focus rings) for better user engagement
+- Show success states with appropriate colors and timing (e.g., green for success, 2s duration for copy feedback)
+
+### Interactive Elements
+- Add visual feedback for all clickable elements (hover, active, focus states)
+- Use consistent transition durations (200ms for most interactions)
+- Implement proper accessibility with focus rings, ARIA attributes, and keyboard navigation
+- Track individual loading states for list items to prevent multiple simultaneous operations
+- Use semantic colors: green for success, blue for actions, gray for neutral states
+
+### Modern Table/List UX
+- Make table headers clickable for sorting with clear visual indicators
+- Preserve sort/filter state in URL parameters for bookmarking and sharing
+- Implement both mobile (cards) and desktop (table) responsive layouts
+- Use transform effects (scale on hover/click) for tactile feedback
+- Show loading spinners inside toggles/buttons during state changes
+
 ## Avoid
 
 - Hardcoded fallback URLs
