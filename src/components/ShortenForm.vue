@@ -1,9 +1,9 @@
 <template>
   <form @submit.prevent="onSubmit" class="space-y-4">
     <div class="relative">
-      <input v-model="url" type="url" name="url" required placeholder="Paste your long URL here..."
+      <input v-model="url" type="text" name="url" required placeholder="Enter URL (e.g., google.com, www.example.com)"
         :disabled="isLoading"
-        class="w-full p-4 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder-gray-400" />
+        class="w-full p-4 border border-gray-300 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed placeholder-gray-400" />
       <div v-if="isLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
         <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
           viewBox="0 0 24 24">
@@ -13,6 +13,16 @@
           </path>
         </svg>
       </div>
+    </div>
+
+    <!-- URL validation message -->
+    <div v-if="!isValidUrl && url.trim()" class="text-sm text-red-600 flex items-center">
+      <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+          clip-rule="evenodd" />
+      </svg>
+      Please enter a valid URL (e.g., google.com, www.example.com)
     </div>
 
     <div class="flex items-center">
@@ -38,10 +48,8 @@
       <!-- DateTime input with validation -->
       <div class="relative">
         <input v-model="expiresAt" id="expiresAt" type="datetime-local" name="expiresAt" :disabled="isLoading"
-          :min="minDateTime" :class="[
-            'w-full p-4 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed',
-            isValidExpiration ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50'
-          ]" />
+          :min="minDateTime"
+          class="w-full p-4 border border-gray-300 rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" />
       </div>
 
       <!-- Validation message -->
@@ -64,7 +72,7 @@
       </div>
     </div>
 
-    <button type="submit" :disabled="isLoading || !url.trim() || !isValidExpiration"
+    <button type="submit" :disabled="isLoading || !url.trim() || !isValidUrl || !isValidExpiration"
       class="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold rounded-lg p-4 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:shadow-none transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
       <span v-if="isLoading" class="flex items-center">
         <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -165,6 +173,37 @@ export default {
       return expireDate > now
     })
 
+    // Validate and normalize URL
+    const isValidUrl = computed(() => {
+      if (!url.value.trim()) return true // Empty is valid (required handled by HTML)
+
+      const cleanUrl = url.value.trim()
+
+      // Must contain at least one dot for domain.extension
+      if (!cleanUrl.includes('.')) return false
+
+      // More strict pattern requiring proper domain structure
+      const urlPattern = /^(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}(?:\.[a-zA-Z]{2,})*(?:\/[^\s]*)?$/
+
+      return urlPattern.test(cleanUrl)
+    })
+
+    function normalizeUrl(inputUrl) {
+      let cleanUrl = inputUrl.trim()
+
+      // If it already has a protocol, return as is
+      if (cleanUrl.match(/^https?:\/\//i)) {
+        return cleanUrl
+      }
+
+      // Add https:// if no protocol is present
+      if (!cleanUrl.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/)) {
+        cleanUrl = 'https://' + cleanUrl
+      }
+
+      return cleanUrl
+    }
+
     // Quick expiration options
     const quickExpirationOptions = [
       { label: '1 hour', hours: 1 },
@@ -183,6 +222,12 @@ export default {
     async function onSubmit() {
       if (isLoading.value) return
 
+      // Validate URL format
+      if (!isValidUrl.value) {
+        result.value = { error: 'Please enter a valid URL.' }
+        return
+      }
+
       // Validate expiration date before submitting
       if (!isValidExpiration.value) {
         result.value = { error: 'Expiration date must be in the future.' }
@@ -194,7 +239,9 @@ export default {
       copied.value = false
 
       try {
-        const newUrl = await urlStore.shortenUrl(url.value, noExpire.value ? null : expiresAt.value)
+        // Normalize the URL before sending
+        const normalizedUrl = normalizeUrl(url.value)
+        const newUrl = await urlStore.shortenUrl(normalizedUrl, noExpire.value ? null : expiresAt.value)
         await urlStore.fetchUrls()
         let shortUrl = newUrl.shortUrl
         if (!shortUrl && newUrl.shortId) {
@@ -226,7 +273,7 @@ export default {
       }
     }
 
-    return { url, expiresAt, noExpire, result, onSubmit, isLoading, copied, copyToClipboard, minDateTime, isValidExpiration, quickExpirationOptions, setQuickExpiration }
+    return { url, expiresAt, noExpire, result, onSubmit, isLoading, copied, copyToClipboard, minDateTime, isValidExpiration, isValidUrl, quickExpirationOptions, setQuickExpiration }
   }
 }
 </script>
