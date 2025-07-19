@@ -1,6 +1,6 @@
 import dbConnect from "../../lib/dbConnect.js";
 import Url from "../../lib/url.js";
-import { getPublicPath } from "./utils/path.js";
+import { getPathSegments } from "./utils/path.js";
 
 export async function handler(event, context) {
   if (event.httpMethod !== "GET") {
@@ -12,8 +12,9 @@ export async function handler(event, context) {
 
   try {
     await dbConnect();
-    const publicPath = getPublicPath(event);
-    const shortId = publicPath.replace(/^\/r\//, "");
+    
+    const pathSegments = getPathSegments(event);
+    const shortId = pathSegments[pathSegments.length - 1] || "";
 
     if (!shortId) {
       return {
