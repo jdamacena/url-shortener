@@ -5,6 +5,7 @@ import {
   createCorsHeaders,
   handleCors,
 } from "./utils/auth.js";
+import { getPublicPath } from "./utils/path.js";
 
 export async function handler(event, context) {
   const headers = createCorsHeaders();
@@ -24,7 +25,10 @@ export async function handler(event, context) {
     const user = authenticateUser(event);
     await dbConnect();
 
-    const { shortId } = event.pathParameters;
+    // Extract shortId from public path
+    const publicPath = getPublicPath(event);
+    const shortId = publicPath.replace(/^\/api\/url\//, "");
+    
     const updateData = JSON.parse(event.body);
 
     if (!shortId) {

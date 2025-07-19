@@ -5,6 +5,7 @@ import {
   createCorsHeaders,
   handleCors,
 } from "./utils/auth.js";
+import { getPublicPath } from "./utils/path.js";
 
 export async function handler(event, context) {
   const headers = createCorsHeaders();
@@ -22,13 +23,9 @@ export async function handler(event, context) {
   }
 
   try {
-    // Authenticate user
     const user = authenticateUser(event);
 
-    // Extract shortUrl from path parameters
-    const publicPath =
-      event.path || (event.rawUrl ? new URL(event.rawUrl).pathname : "");
-
+    const publicPath = getPublicPath(event);
     const shortUrl = publicPath.replace(/^\/api\/analytics\//, "");
 
     await dbConnect();
