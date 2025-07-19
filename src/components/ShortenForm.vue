@@ -22,13 +22,49 @@
         expire</label>
     </div>
 
-    <div v-if="!noExpire" class="space-y-2">
+    <div v-if="!noExpire" class="space-y-3">
       <label for="expiresAt" class="block text-gray-700 text-sm font-medium">Expiration date and time</label>
-      <input v-model="expiresAt" id="expiresAt" type="datetime-local" name="expiresAt" :disabled="isLoading"
-        class="w-full p-4 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" />
+
+      <!-- Quick expiration buttons -->
+      <div class="flex flex-wrap gap-2">
+        <span class="text-xs text-gray-500 self-center mr-2">Quick select:</span>
+        <button v-for="option in quickExpirationOptions" :key="option.label" type="button"
+          @click="setQuickExpiration(option.hours)"
+          class="px-3 py-1 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transform hover:scale-105 active:scale-95">
+          {{ option.label }}
+        </button>
+      </div>
+
+      <!-- DateTime input with validation -->
+      <div class="relative">
+        <input v-model="expiresAt" id="expiresAt" type="datetime-local" name="expiresAt" :disabled="isLoading"
+          :min="minDateTime" :class="[
+            'w-full p-4 border rounded-lg text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed',
+            isValidExpiration ? 'border-gray-300 focus:ring-blue-500 focus:border-blue-500' : 'border-red-300 focus:ring-red-500 focus:border-red-500 bg-red-50'
+          ]" />
+      </div>
+
+      <!-- Validation message -->
+      <div v-if="!isValidExpiration && expiresAt" class="text-sm text-red-600 flex items-center">
+        <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clip-rule="evenodd" />
+        </svg>
+        Expiration date must be in the future
+      </div>
+
+      <!-- Helpful hint -->
+      <div v-else-if="expiresAt" class="text-sm text-gray-500 flex items-center">
+        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Link will expire on {{ new Date(expiresAt).toLocaleString() }}
+      </div>
     </div>
 
-    <button type="submit" :disabled="isLoading || !url.trim()"
+    <button type="submit" :disabled="isLoading || !url.trim() || !isValidExpiration"
       class="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold rounded-lg p-4 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:shadow-none transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
       <span v-if="isLoading" class="flex items-center">
         <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -100,7 +136,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useUrlStore } from '../stores/urlStore'
 
 export default {
@@ -114,8 +150,44 @@ export default {
     const isLoading = ref(false)
     const copied = ref(false)
 
+    // Set minimum datetime to current time
+    const minDateTime = computed(() => {
+      const now = new Date()
+      // Format as YYYY-MM-DDTHH:MM for datetime-local input
+      return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+    })
+
+    // Validate expiration date
+    const isValidExpiration = computed(() => {
+      if (noExpire.value || !expiresAt.value) return true
+      const expireDate = new Date(expiresAt.value)
+      const now = new Date()
+      return expireDate > now
+    })
+
+    // Quick expiration options
+    const quickExpirationOptions = [
+      { label: '1 hour', hours: 1 },
+      { label: '1 day', hours: 24 },
+      { label: '1 week', hours: 24 * 7 },
+      { label: '1 month', hours: 24 * 30 }
+    ]
+
+    function setQuickExpiration(hours) {
+      const future = new Date()
+      future.setHours(future.getHours() + hours)
+      // Format for datetime-local input
+      expiresAt.value = new Date(future.getTime() - future.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+    }
+
     async function onSubmit() {
       if (isLoading.value) return
+
+      // Validate expiration date before submitting
+      if (!isValidExpiration.value) {
+        result.value = { error: 'Expiration date must be in the future.' }
+        return
+      }
 
       isLoading.value = true
       result.value = null
@@ -154,7 +226,7 @@ export default {
       }
     }
 
-    return { url, expiresAt, noExpire, result, onSubmit, isLoading, copied, copyToClipboard }
+    return { url, expiresAt, noExpire, result, onSubmit, isLoading, copied, copyToClipboard, minDateTime, isValidExpiration, quickExpirationOptions, setQuickExpiration }
   }
 }
 </script>
