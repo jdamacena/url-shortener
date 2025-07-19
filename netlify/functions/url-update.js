@@ -6,6 +6,7 @@ import {
   handleCors,
 } from "./utils/auth.js";
 import { getPathSegments } from "./utils/path.js";
+import { ObjectId } from "mongodb";
 
 export async function handler(event, context) {
   const headers = createCorsHeaders();
@@ -56,10 +57,21 @@ export async function handler(event, context) {
       };
     }
 
+    const updatePayload = {
+      filter: {
+        shortUrl: shortId,
+        userId: new ObjectId(user.userId),
+      },
+      updates: { $set: updateFields },
+      options: { new: true, runValidators: true },
+    };
+
+    console.log("updating URL with:", updatePayload);
+
     const url = await Url.findOneAndUpdate(
-      { shortId, userId: user.userId },
-      updateFields,
-      { new: true }
+      updatePayload.filter,
+      updatePayload.updates,
+      updatePayload.options
     );
 
     if (!url) {
