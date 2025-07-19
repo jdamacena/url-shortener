@@ -8,6 +8,7 @@ import Register from "./components/Register.vue";
 import UrlAnalytics from "./components/UrlAnalytics.vue";
 import NotFound from "./components/NotFound.vue";
 import LinkExpired from "./components/LinkExpired.vue";
+import LinkNotFound from "./components/LinkNotFound.vue";
 import Dashboard from "./components/Dashboard.vue";
 import AdminPanel from "./components/AdminPanel.vue";
 import "./assets/styles/main.css";
@@ -22,6 +23,7 @@ const router = createRouter({
     { path: "/register", component: Register },
     { path: "/analytics/:shortUrl", component: UrlAnalytics },
     { path: "/expired", component: LinkExpired },
+    { path: "/link-not-found", component: LinkNotFound },
     {
       path: "/admin",
       name: "Admin",

@@ -27,21 +27,30 @@ export async function handler(event, context) {
       };
     }
 
-    const url = await Url.findOne({
-      shortUrl: shortId,
-      active: true,
-      $or: [
-        { expiresAt: { $exists: false } },
-        { expiresAt: { $gt: new Date() } },
-      ],
-    });
-
-    if (!url) {
+    // ensure SITE_URL is set for redirects to error pages
+    const SITE_URL = process.env.VITE_SITE_URL;
+    if (!SITE_URL) {
+      console.error("Missing VITE_SITE_URL env var");
       return {
-        statusCode: 404,
-        body: JSON.stringify({ error: "Short URL not found or expired" }),
+        statusCode: 500,
+        body: JSON.stringify({ error: "Server config error" }),
       };
     }
+    // look up raw document to distinguish not-found vs expired/inactive
+    const urlDoc = await Url.findOne({ shortUrl: shortId });
+    if (!urlDoc) {
+      // redirect to link-not-found page
+      return {
+        statusCode: 302,
+        headers: { Location: `${SITE_URL}/link-not-found` },
+      };
+    }
+    // expired or deactivated
+    const now = new Date();
+    if (!urlDoc.active || (urlDoc.expiresAt && urlDoc.expiresAt <= now)) {
+      return { statusCode: 302, headers: { Location: `${SITE_URL}/expired` } };
+    }
+    const url = urlDoc;
 
     // Collect analytics before redirect
     url.clickCount = (url.clickCount || 0) + 1;
